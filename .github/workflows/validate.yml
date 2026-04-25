@@ -1,0 +1,24 @@
+name: Validate Techniques
+
+on:
+  push:
+    paths:
+      - "data/**"
+      - "schema/**"
+      - "scripts/validate.py"
+  pull_request:
+    paths:
+      - "data/**"
+      - "schema/**"
+      - "scripts/validate.py"
+
+jobs:
+  validate:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: astral-sh/setup-uv@v4
+
+      - name: Validate technique YAML files
+        run: uv run --with pyyaml --with jsonschema python scripts/validate.py

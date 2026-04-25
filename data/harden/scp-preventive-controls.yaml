@@ -1,0 +1,22 @@
+id: D3FA-HD-0001
+name: SCP Preventive Controls
+tactic: harden
+category: Access Control
+description: >
+  Apply Service Control Policies at the AWS Organizations level to enforce
+  preventive guardrails that restrict dangerous actions such as disabling
+  CloudTrail, modifying GuardDuty, or leaving the organization. SCPs act
+  as a permissions boundary that no IAM principal in a member account can
+  exceed.
+aws_services:
+  - AWS Organizations
+counters:
+  - T1562.008
+  - T1562.A001
+  - T1562.007
+  - T1666.A002
+  - T1484.002
+d3fend_ref: d3f:AuthorizationEnforcement
+attack_tactics:
+  - TA0005
+  - TA0040

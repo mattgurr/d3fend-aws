@@ -1,0 +1,25 @@
+id: D3FA-DT-0001
+name: CloudTrail Management Event Analysis
+tactic: detect
+category: Platform Monitoring
+description: >
+  Analyze CloudTrail management events to detect unauthorized API activity
+  such as credential abuse, privilege escalation, or attempts to disable
+  security controls. Management events capture control plane operations
+  across all AWS services.
+aws_services:
+  - AWS CloudTrail
+  - Amazon CloudWatch Logs
+counters:
+  - T1078.A001
+  - T1078.A002
+  - T1098.001
+  - T1098.003
+  - T1562.008
+  - T1562.A001
+  - T1070.A001
+d3fend_ref: d3f:PlatformMonitoring
+attack_tactics:
+  - TA0003
+  - TA0004
+  - TA0005

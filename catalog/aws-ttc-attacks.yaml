@@ -1,0 +1,158 @@
+---
+# AWS Threat Technique Catalog — Normalized Attack Catalog
+# Source: https://aws-samples.github.io/threat-technique-catalog-for-aws/matrix.html
+#
+# Each entry uses the original AWS TTC / ATT&CK technique IDs verbatim.
+
+tactics:
+  - id: TA0042
+    name: Resource Development
+    techniques:
+      - id: T1583.001
+        name: Acquire Infrastructure - Domains
+
+  - id: TA0001
+    name: Initial Access
+    techniques:
+      - id: T1190.A016
+        name: EC2 Hosted Application Compromise
+      - id: T1190.A019
+        name: Overly Permissive VPC Security Groups
+      - id: T1199.A002
+        name: Role Assumption and Federated Access
+
+  - id: TA0002
+    name: Execution
+    techniques:
+      - id: T1059.009
+        name: Cloud API
+      - id: T1648.A001
+        name: Invoking Lambda Function
+      - id: T1648.A002
+        name: Malicious Code from Compromised Third Party Packages
+
+  - id: TA0003
+    name: Persistence
+    techniques:
+      - id: T1098.001
+        name: Additional Cloud Credentials
+      - id: T1098.003
+        name: Additional Cloud Roles
+      - id: T1098.A001
+        name: AWS Support Case Closure
+      - id: T1098.A006
+        name: Cognito Refresh Token Abuse
+      - id: T1136.003
+        name: Create Cloud Account
+      - id: T1484.002
+        name: Trust Modification
+
+  - id: TA0004
+    name: Privilege Escalation
+    techniques:
+      - id: T1098.001
+        name: Additional Cloud Credentials
+      - id: T1098.003
+        name: Additional Cloud Roles
+
+  - id: TA0005
+    name: Defense Evasion
+    techniques:
+      - id: T1070.A001
+        name: Delete IAM Entities
+      - id: T1078.A001
+        name: Valid Accounts - IAM Users
+      - id: T1078.A002
+        name: Valid Accounts - Account Root User
+      - id: T1562.007
+        name: Disable or Modify Cloud Firewall
+      - id: T1562.008
+        name: Disable Cloud Logs
+      - id: T1562.A001
+        name: Disable or Modify GuardDuty
+
+  - id: TA0006
+    name: Credential Access
+    techniques:
+      - id: T1552.001
+        name: Credentials In Files
+      - id: T1552.005
+        name: Cloud Instance Metadata API
+
+  - id: TA0007
+    name: Discovery
+    techniques:
+      - id: AT1023.001
+        name: Query RDS
+      - id: T1087.004
+        name: Cloud Account Discovery
+      - id: T1538
+        name: Cloud Service Dashboard
+      - id: T1619.A001
+        name: S3 Object and Bucket Enumeration
+
+  - id: TA0008
+    name: Lateral Movement
+    techniques:
+      - id: T1199.A002
+        name: Role Assumption and Federated Access
+
+  - id: TA0009
+    name: Collection
+    techniques:
+      - id: AT1667.001
+        name: API Gateway Abuse
+      - id: T1213.A013
+        name: RDS Instance Manipulation
+      - id: T1530.A001
+        name: S3 Object Collection
+
+  - id: TA0040
+    name: Impact
+    techniques:
+      - id: T1485.001
+        name: Lifecycle-Triggered Deletion
+      - id: T1485.A001
+        name: RDS Instances and Backups Destruction
+      - id: T1485.A002
+        name: AMI Image Deletion
+      - id: T1485.A003
+        name: S3 Object and Bucket Deletion
+      - id: T1486.A001
+        name: S3 Encryption - SSE-C Key Encryption
+      - id: T1486.A002
+        name: EC2/EBS Data Encryption
+      - id: T1486.A003
+        name: RDS Data Encryption
+      - id: T1491.A001
+        name: Subdomain Takeover
+      - id: T1496.001
+        name: Compute Hijacking
+      - id: T1496.003
+        name: SMS Pumping
+      - id: T1496.004
+        name: Cloud Service Hijacking
+      - id: T1496.A001
+        name: Cloud Service Hijacking - SES Messaging
+      - id: T1496.A006
+        name: Compute Hijacking - ECS
+      - id: T1496.A007
+        name: Cloud Service Hijacking - Bedrock LLM Abuse
+      - id: T1496.A008
+        name: Compute Hijacking - EC2 Use
+      - id: T1496.A009
+        name: Compute Hijacking - WorkSpaces
+      - id: T1531
+        name: Account Access Removal
+      - id: T1578.001
+        name: Create Snapshot
+      - id: T1578.002
+        name: Create Cloud Instance
+      - id: T1578.003
+        name: Delete Cloud Instance
+      - id: T1578.005
+        name: Modify Cloud Compute Configurations
+      - id: T1666.A001
+        name: Create or Invite AWS Account
+      - id: T1666.A002
+        name: Leave AWS Organization

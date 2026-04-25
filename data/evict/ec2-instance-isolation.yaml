@@ -1,0 +1,22 @@
+id: D3FA-EV-0002
+name: EC2 Instance Isolation
+tactic: evict
+category: Resource Eviction
+description: >
+  Isolate a compromised EC2 instance by replacing its security groups with
+  a restrictive isolation group that denies all inbound and outbound traffic.
+  Optionally capture a forensic snapshot of attached EBS volumes before
+  termination. This contains lateral movement and stops active exploitation
+  while preserving evidence.
+aws_services:
+  - Amazon EC2
+  - Amazon VPC
+counters:
+  - T1190.A016
+  - T1496.001
+  - T1496.A008
+  - T1578.002
+d3fend_ref: d3f:NetworkIsolation
+attack_tactics:
+  - TA0001
+  - TA0040

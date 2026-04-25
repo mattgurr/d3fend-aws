@@ -1,0 +1,19 @@
+id: D3FA-HD-0002
+name: IAM MFA Enforcement
+tactic: harden
+category: Credential Hardening
+description: >
+  Enforce multi-factor authentication for IAM users, especially for
+  privileged operations and console access. Apply IAM policies that deny
+  actions unless MFA is present in the request context. Require hardware
+  or virtual MFA for the root user.
+aws_services:
+  - AWS IAM
+counters:
+  - T1078.A001
+  - T1078.A002
+  - T1552.001
+d3fend_ref: d3f:Multi-factorAuthentication
+attack_tactics:
+  - TA0005
+  - TA0006

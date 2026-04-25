@@ -1,0 +1,84 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "D3FEND-AWS Defensive Technique",
+  "description": "Schema for a D3FEND-AWS defensive technique YAML file",
+  "type": "object",
+  "required": [
+    "id",
+    "name",
+    "tactic",
+    "category",
+    "description",
+    "aws_services",
+    "counters"
+  ],
+  "additionalProperties": false,
+  "properties": {
+    "id": {
+      "type": "string",
+      "pattern": "^D3FA-(DT|HD|EV)-[0-9]{4}$",
+      "description": "Unique technique ID. Format: D3FA-{DT|HD|EV}-NNNN"
+    },
+    "name": {
+      "type": "string",
+      "minLength": 3,
+      "maxLength": 120,
+      "description": "Human-readable technique name"
+    },
+    "tactic": {
+      "type": "string",
+      "enum": ["detect", "harden", "evict"],
+      "description": "D3FEND defensive tactic"
+    },
+    "category": {
+      "type": "string",
+      "minLength": 3,
+      "maxLength": 80,
+      "description": "D3FEND-aligned sub-category"
+    },
+    "description": {
+      "type": "string",
+      "minLength": 10,
+      "description": "What this defensive technique does, in AWS context"
+    },
+    "aws_services": {
+      "type": "array",
+      "items": {
+        "type": "string",
+        "minLength": 2
+      },
+      "minItems": 1,
+      "uniqueItems": true,
+      "description": "AWS services involved in this defensive technique"
+    },
+    "counters": {
+      "type": "array",
+      "items": {
+        "type": "string",
+        "pattern": "^[A-Z]{1,2}T?[0-9]{4}(\\.[A-Z]?[0-9]{3})?$",
+        "description": "AWS TTC or ATT&CK technique ID"
+      },
+      "minItems": 1,
+      "uniqueItems": true,
+      "description": "AWS TTC attack technique IDs this defense counters"
+    },
+    "d3fend_ref": {
+      "type": "string",
+      "pattern": "^d3f:",
+      "description": "Canonical D3FEND technique reference (e.g. d3f:PlatformMonitoring)"
+    },
+    "attack_tactics": {
+      "type": "array",
+      "items": {
+        "type": "string",
+        "pattern": "^TA[0-9]{4}$"
+      },
+      "uniqueItems": true,
+      "description": "ATT&CK tactic IDs for context"
+    },
+    "notes": {
+      "type": "string",
+      "description": "Optional implementation notes or caveats"
+    }
+  }
+}
