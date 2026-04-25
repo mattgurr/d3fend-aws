@@ -760,7 +760,7 @@ def build_html(techniques, attack_lookup):
         ${{t.d3fend_ref ? `
         <div class="detail__section">
           <div class="detail__section-title">D3FEND Reference</div>
-          <div class="detail__d3fend">${{t.d3fend_ref}}</div>
+          <a class="detail__d3fend" href="https://d3fend.mitre.org/technique/${{t.d3fend_ref}}/" target="_blank" rel="noopener">${{t.d3fend_ref}}</a>
         </div>` : ""}}
       `;
       document.getElementById("overlay").classList.add("active");
