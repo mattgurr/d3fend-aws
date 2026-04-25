@@ -310,9 +310,6 @@ def build_html(techniques, attack_lookup):
       padding: 14px 18px;
       color: white;
       text-align: center;
-      position: sticky;
-      top: 109px;
-      z-index: 5;
     }}
     .tactic-title {{
       font-size: 1rem;
@@ -601,7 +598,6 @@ def build_html(techniques, attack_lookup):
         border-bottom: 1px solid var(--border-color);
       }}
       .tactic-header {{
-        position: static;
       }}
       .detail-panel {{
         width: 100vw;
