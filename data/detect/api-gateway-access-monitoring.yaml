@@ -1,0 +1,16 @@
+id: D3FA-DT-0016
+name: API Gateway Access Monitoring
+tactic: detect
+category: Platform Monitoring
+description: >
+  Monitor API Gateway access logs and execution logs for anomalous request
+  patterns indicating API abuse, data exfiltration through public APIs, or
+  unauthorized endpoint access.
+aws_services:
+  - Amazon API Gateway
+  - Amazon CloudWatch Logs
+counters:
+  - AT1667.001
+d3fend_ref: d3f:PlatformMonitoring
+attack_tactics:
+  - TA0009

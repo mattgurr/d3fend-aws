@@ -1,0 +1,18 @@
+id: D3FA-EV-0004
+name: Lambda Function Disable
+tactic: evict
+category: Resource Eviction
+description: >
+  Disable a compromised or malicious Lambda function by setting its reserved
+  concurrency to zero, removing event source mappings, or deleting the
+  function. Prevents further serverless execution while preserving
+  configuration for investigation.
+aws_services:
+  - AWS Lambda
+counters:
+  - T1648.A001
+  - T1648.A002
+  - T1059.009
+d3fend_ref: d3f:ProcessTermination
+attack_tactics:
+  - TA0002

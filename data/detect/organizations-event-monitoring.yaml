@@ -1,0 +1,19 @@
+id: D3FA-DT-0010
+name: Organizations Event Monitoring
+tactic: detect
+category: Platform Monitoring
+description: >
+  Monitor CloudTrail events for AWS Organizations actions such as creating
+  accounts, inviting accounts, modifying policies, or member accounts leaving
+  the organization.
+aws_services:
+  - AWS Organizations
+  - AWS CloudTrail
+counters:
+  - T1136.003
+  - T1666.A001
+  - T1666.A002
+d3fend_ref: d3f:PlatformMonitoring
+attack_tactics:
+  - TA0003
+  - TA0040

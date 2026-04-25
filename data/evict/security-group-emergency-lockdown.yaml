@@ -1,0 +1,20 @@
+id: D3FA-EV-0008
+name: Security Group Emergency Lockdown
+tactic: evict
+category: Resource Eviction
+description: >
+  Replace all security groups on compromised resources with an isolation
+  security group that has no inbound or outbound rules. This immediately
+  cuts network access to and from affected instances while keeping them
+  running for forensic analysis.
+aws_services:
+  - Amazon VPC
+  - Amazon EC2
+counters:
+  - T1190.A019
+  - T1562.007
+  - T1190.A016
+d3fend_ref: d3f:NetworkIsolation
+attack_tactics:
+  - TA0001
+  - TA0005

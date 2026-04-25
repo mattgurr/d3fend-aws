@@ -1,0 +1,16 @@
+id: D3FA-DT-0015
+name: Support Case Activity Monitoring
+tactic: detect
+category: Platform Monitoring
+description: >
+  Monitor AWS Support API events to detect unauthorized support case closure
+  or modification that could be used to suppress security-related cases or
+  hide malicious activity.
+aws_services:
+  - AWS Support
+  - AWS CloudTrail
+counters:
+  - T1098.A001
+d3fend_ref: d3f:PlatformMonitoring
+attack_tactics:
+  - TA0003

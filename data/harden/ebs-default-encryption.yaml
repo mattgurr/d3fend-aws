@@ -1,0 +1,17 @@
+id: D3FA-HD-0008
+name: EBS Default Encryption
+tactic: harden
+category: Platform Hardening
+description: >
+  Enable EBS default encryption at the account level using customer-managed
+  KMS keys. Prevents adversaries from creating unencrypted volumes and limits
+  exposure of data on snapshots shared or exfiltrated from the account.
+aws_services:
+  - Amazon EC2
+  - AWS KMS
+counters:
+  - T1486.A002
+  - T1578.001
+d3fend_ref: d3f:DiskEncryption
+attack_tactics:
+  - TA0040

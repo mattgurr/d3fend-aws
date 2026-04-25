@@ -1,0 +1,17 @@
+id: D3FA-HD-0013
+name: Route 53 Domain Protection
+tactic: harden
+category: Platform Hardening
+description: >
+  Enable domain transfer lock, DNSSEC signing, and registrar lock on Route 53
+  registered domains. Monitor for dangling DNS records pointing to
+  decommissioned resources that enable subdomain takeover.
+aws_services:
+  - Amazon Route 53
+counters:
+  - T1583.001
+  - T1491.A001
+d3fend_ref: d3f:PlatformHardening
+attack_tactics:
+  - TA0042
+  - TA0040

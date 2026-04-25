@@ -1,0 +1,23 @@
+id: D3FA-EV-0009
+name: Compute Resource Termination
+tactic: evict
+category: Resource Eviction
+description: >
+  Terminate or stop unauthorized compute resources being used for
+  cryptomining, resource hijacking, or other abuse. Includes EC2 instances,
+  ECS tasks, and WorkSpaces that were launched or compromised by an
+  adversary.
+aws_services:
+  - Amazon EC2
+  - Amazon ECS
+  - Amazon WorkSpaces
+counters:
+  - T1496.001
+  - T1496.A006
+  - T1496.A008
+  - T1496.A009
+  - T1578.002
+  - T1578.005
+d3fend_ref: d3f:ProcessTermination
+attack_tactics:
+  - TA0040

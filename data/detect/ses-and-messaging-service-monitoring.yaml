@@ -1,0 +1,18 @@
+id: D3FA-DT-0013
+name: SES and Messaging Service Monitoring
+tactic: detect
+category: Platform Monitoring
+description: >
+  Monitor SES sending activity and SNS topic usage for anomalous volume or
+  recipient patterns indicating email abuse, SMS pumping, or unauthorized
+  messaging.
+aws_services:
+  - Amazon SES
+  - Amazon SNS
+  - AWS CloudTrail
+counters:
+  - T1496.A001
+  - T1496.003
+d3fend_ref: d3f:PlatformMonitoring
+attack_tactics:
+  - TA0040

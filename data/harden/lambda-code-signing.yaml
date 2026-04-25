@@ -1,0 +1,16 @@
+id: D3FA-HD-0006
+name: Lambda Code Signing
+tactic: harden
+category: Application Hardening
+description: >
+  Enforce code signing for Lambda functions using AWS Signer to prevent
+  deployment of untrusted or tampered code from compromised packages or
+  supply chain attacks.
+aws_services:
+  - AWS Lambda
+  - AWS Signer
+counters:
+  - T1648.A002
+d3fend_ref: d3f:ApplicationHardening
+attack_tactics:
+  - TA0002

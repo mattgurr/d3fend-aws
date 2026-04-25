@@ -1,0 +1,21 @@
+id: D3FA-DT-0008
+name: RDS Activity Monitoring
+tactic: detect
+category: Platform Monitoring
+description: >
+  Monitor RDS API events and database activity streams to detect unauthorized
+  database discovery, instance modification, snapshot export, or destruction
+  of database resources.
+aws_services:
+  - Amazon RDS
+  - AWS CloudTrail
+counters:
+  - AT1023.001
+  - T1213.A013
+  - T1485.A001
+  - T1486.A003
+d3fend_ref: d3f:PlatformMonitoring
+attack_tactics:
+  - TA0007
+  - TA0009
+  - TA0040

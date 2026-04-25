@@ -1,0 +1,16 @@
+id: D3FA-DT-0017
+name: Account Access Change Monitoring
+tactic: detect
+category: User Behavior Analysis
+description: >
+  Monitor for IAM actions that remove user access such as deleting login
+  profiles, deactivating MFA, removing users from groups, or revoking
+  permissions — indicators of account access removal attacks.
+aws_services:
+  - AWS IAM
+  - AWS CloudTrail
+counters:
+  - T1531
+d3fend_ref: d3f:UserBehaviorAnalysis
+attack_tactics:
+  - TA0040

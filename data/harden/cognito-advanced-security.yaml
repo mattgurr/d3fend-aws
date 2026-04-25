@@ -1,0 +1,15 @@
+id: D3FA-HD-0011
+name: Cognito Advanced Security
+tactic: harden
+category: Application Hardening
+description: >
+  Enable Cognito Advanced Security features including compromised credential
+  detection, adaptive authentication, and token abuse prevention to harden
+  user pools against credential-based attacks.
+aws_services:
+  - Amazon Cognito
+counters:
+  - T1098.A006
+d3fend_ref: d3f:ApplicationHardening
+attack_tactics:
+  - TA0003

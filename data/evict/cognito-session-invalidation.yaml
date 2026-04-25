@@ -1,0 +1,15 @@
+id: D3FA-EV-0010
+name: Cognito Session Invalidation
+tactic: evict
+category: Credential Eviction
+description: >
+  Invalidate compromised Cognito user sessions by globally signing out the
+  user, revoking refresh tokens, and disabling the user account. Prevents
+  continued abuse of stolen Cognito tokens.
+aws_services:
+  - Amazon Cognito
+counters:
+  - T1098.A006
+d3fend_ref: d3f:CredentialRevocation
+attack_tactics:
+  - TA0003

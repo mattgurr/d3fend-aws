@@ -1,0 +1,17 @@
+id: D3FA-HD-0012
+name: Resource Control Policies
+tactic: harden
+category: Access Control
+description: >
+  Apply Resource Control Policies at the organization level to restrict which
+  external principals can access resources within member accounts, preventing
+  unauthorized cross-account access regardless of resource-level policies.
+aws_services:
+  - AWS Organizations
+counters:
+  - T1530.A001
+  - T1199.A002
+d3fend_ref: d3f:AuthorizationEnforcement
+attack_tactics:
+  - TA0008
+  - TA0009

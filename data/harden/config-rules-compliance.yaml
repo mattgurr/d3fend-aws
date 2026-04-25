@@ -1,0 +1,19 @@
+id: D3FA-HD-0016
+name: Config Rules Compliance
+tactic: harden
+category: Configuration Management
+description: >
+  Deploy AWS Config rules and conformance packs to continuously evaluate
+  resource configurations against security baselines. Detect and alert on
+  non-compliant configurations such as unencrypted storage, public access,
+  or missing logging.
+aws_services:
+  - AWS Config
+counters:
+  - T1190.A019
+  - T1562.008
+  - T1562.007
+d3fend_ref: d3f:PlatformHardening
+attack_tactics:
+  - TA0001
+  - TA0005

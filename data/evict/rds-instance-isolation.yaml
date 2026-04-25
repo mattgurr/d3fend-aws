@@ -1,0 +1,21 @@
+id: D3FA-EV-0006
+name: RDS Instance Isolation
+tactic: evict
+category: Resource Eviction
+description: >
+  Isolate a compromised RDS instance by modifying its security group to deny
+  all inbound connections, disabling public accessibility, and taking a final
+  snapshot for forensics. Prevents ongoing data access or destruction while
+  preserving evidence.
+aws_services:
+  - Amazon RDS
+  - Amazon VPC
+counters:
+  - AT1023.001
+  - T1213.A013
+  - T1485.A001
+d3fend_ref: d3f:NetworkIsolation
+attack_tactics:
+  - TA0007
+  - TA0009
+  - TA0040

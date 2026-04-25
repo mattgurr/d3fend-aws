@@ -1,0 +1,16 @@
+id: D3FA-HD-0014
+name: AMI and Snapshot Protection
+tactic: harden
+category: Platform Hardening
+description: >
+  Apply tag-based resource policies and SCPs to restrict AMI deregistration
+  and snapshot deletion. Use Recycle Bin for EBS snapshots and AMIs to enable
+  recovery of accidentally or maliciously deleted images.
+aws_services:
+  - Amazon EC2
+counters:
+  - T1485.A002
+  - T1578.001
+d3fend_ref: d3f:PlatformHardening
+attack_tactics:
+  - TA0040

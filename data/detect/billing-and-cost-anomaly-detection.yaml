@@ -1,0 +1,23 @@
+id: D3FA-DT-0006
+name: Billing and Cost Anomaly Detection
+tactic: detect
+category: Platform Monitoring
+description: >
+  Monitor for unexpected cost spikes that indicate compute hijacking, service
+  abuse, or SMS pumping via billing anomaly alerts and budget threshold
+  notifications.
+aws_services:
+  - AWS Cost Anomaly Detection
+  - AWS Budgets
+counters:
+  - T1496.001
+  - T1496.003
+  - T1496.004
+  - T1496.A001
+  - T1496.A006
+  - T1496.A007
+  - T1496.A008
+  - T1496.A009
+d3fend_ref: d3f:PlatformMonitoring
+attack_tactics:
+  - TA0040

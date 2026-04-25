@@ -1,0 +1,18 @@
+id: D3FA-DT-0007
+name: Route 53 DNS Query Logging
+tactic: detect
+category: Network Traffic Analysis
+description: >
+  Log and analyze DNS queries resolved through Route 53 to detect domain
+  acquisition reconnaissance, command-and-control communication, or subdomain
+  takeover indicators.
+aws_services:
+  - Amazon Route 53
+  - Amazon CloudWatch Logs
+counters:
+  - T1583.001
+  - T1491.A001
+d3fend_ref: d3f:DNSTrafficAnalysis
+attack_tactics:
+  - TA0042
+  - TA0040

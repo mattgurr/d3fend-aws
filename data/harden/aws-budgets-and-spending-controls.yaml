@@ -1,0 +1,23 @@
+id: D3FA-HD-0015
+name: AWS Budgets and Spending Controls
+tactic: harden
+category: Platform Hardening
+description: >
+  Configure budget thresholds with automated alerts and optional actions
+  (e.g. apply restrictive SCPs) to limit financial exposure from compute
+  hijacking, SMS pumping, or other resource abuse.
+aws_services:
+  - AWS Budgets
+  - AWS Cost Explorer
+counters:
+  - T1496.001
+  - T1496.003
+  - T1496.004
+  - T1496.A001
+  - T1496.A006
+  - T1496.A007
+  - T1496.A008
+  - T1496.A009
+d3fend_ref: d3f:PlatformHardening
+attack_tactics:
+  - TA0040

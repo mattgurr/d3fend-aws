@@ -1,0 +1,16 @@
+id: D3FA-DT-0014
+name: Bedrock Model Invocation Monitoring
+tactic: detect
+category: Platform Monitoring
+description: >
+  Monitor Bedrock model invocation logs for unauthorized LLM usage, unexpected
+  volume spikes, or invocations from unusual principals indicating service
+  hijacking.
+aws_services:
+  - Amazon Bedrock
+  - AWS CloudTrail
+counters:
+  - T1496.A007
+d3fend_ref: d3f:PlatformMonitoring
+attack_tactics:
+  - TA0040

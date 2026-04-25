@@ -1,0 +1,21 @@
+id: D3FA-DT-0005
+name: IAM Access Analyzer
+tactic: detect
+category: User Behavior Analysis
+description: >
+  Use IAM Access Analyzer to detect resource policies granting access to
+  external principals, unused permissions, and overly permissive cross-account
+  trust relationships.
+aws_services:
+  - AWS IAM Access Analyzer
+counters:
+  - T1199.A002
+  - T1098.001
+  - T1098.003
+  - T1136.003
+  - T1484.002
+d3fend_ref: d3f:AuthorizationEventThresholding
+attack_tactics:
+  - TA0003
+  - TA0004
+  - TA0008

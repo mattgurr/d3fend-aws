@@ -1,0 +1,16 @@
+id: D3FA-DT-0003
+name: VPC Flow Log Analysis
+tactic: detect
+category: Network Traffic Analysis
+description: >
+  Analyze VPC Flow Logs for anomalous network patterns such as unexpected
+  outbound connections, port scanning, or lateral movement between instances.
+aws_services:
+  - Amazon VPC
+  - Amazon CloudWatch Logs
+counters:
+  - T1190.A019
+  - T1190.A016
+d3fend_ref: d3f:NetworkTrafficAnalysis
+attack_tactics:
+  - TA0001

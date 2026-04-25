@@ -1,0 +1,15 @@
+id: D3FA-HD-0004
+name: IMDSv2 Enforcement
+tactic: harden
+category: Platform Hardening
+description: >
+  Enforce Instance Metadata Service v2 (IMDSv2) with required session tokens
+  to prevent SSRF-based credential theft from the instance metadata endpoint.
+  Disable IMDSv1 across all EC2 instances.
+aws_services:
+  - Amazon EC2
+counters:
+  - T1552.005
+d3fend_ref: d3f:PlatformHardening
+attack_tactics:
+  - TA0006

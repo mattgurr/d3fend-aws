@@ -1,0 +1,22 @@
+id: D3FA-DT-0012
+name: EC2 Compute Activity Monitoring
+tactic: detect
+category: Platform Monitoring
+description: >
+  Monitor EC2 API events for unauthorized instance launches, snapshot creation
+  or export, instance termination, or modification of compute configurations
+  that indicate resource hijacking or evidence destruction.
+aws_services:
+  - Amazon EC2
+  - AWS CloudTrail
+counters:
+  - T1578.001
+  - T1578.002
+  - T1578.003
+  - T1578.005
+  - T1485.A002
+  - T1486.A002
+  - T1496.A009
+d3fend_ref: d3f:PlatformMonitoring
+attack_tactics:
+  - TA0040

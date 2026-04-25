@@ -1,0 +1,15 @@
+id: D3FA-DT-0011
+name: Cognito User Activity Monitoring
+tactic: detect
+category: User Behavior Analysis
+description: >
+  Monitor Cognito user pool activity for anomalous authentication patterns
+  such as refresh token abuse, mass token generation, or unexpected identity
+  pool role mapping changes.
+aws_services:
+  - Amazon Cognito
+counters:
+  - T1098.A006
+d3fend_ref: d3f:UserBehaviorAnalysis
+attack_tactics:
+  - TA0003

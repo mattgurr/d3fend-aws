@@ -1,0 +1,18 @@
+id: D3FA-EV-0007
+name: Account Quarantine
+tactic: evict
+category: Account Eviction
+description: >
+  Quarantine a compromised member account by moving it to a restricted OU
+  with a deny-all SCP, preventing any API actions from within the account
+  while maintaining organizational control and audit trail.
+aws_services:
+  - AWS Organizations
+counters:
+  - T1531
+  - T1666.A001
+  - T1136.003
+d3fend_ref: d3f:AccountLocking
+attack_tactics:
+  - TA0003
+  - TA0040

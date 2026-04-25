@@ -1,0 +1,16 @@
+id: D3FA-EV-0011
+name: SES Sending Suspension
+tactic: evict
+category: Resource Eviction
+description: >
+  Suspend SES sending by placing the account in sandbox mode, deleting
+  unauthorized verified identities, and removing SMTP credentials. Stops
+  email abuse and SMS pumping originating from the compromised account.
+aws_services:
+  - Amazon SES
+counters:
+  - T1496.A001
+  - T1496.003
+d3fend_ref: d3f:ProcessTermination
+attack_tactics:
+  - TA0040

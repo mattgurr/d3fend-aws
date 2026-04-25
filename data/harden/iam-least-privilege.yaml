@@ -1,0 +1,22 @@
+id: D3FA-HD-0010
+name: IAM Least Privilege
+tactic: harden
+category: Access Control
+description: >
+  Enforce least-privilege IAM policies by using IAM Access Analyzer policy
+  generation, removing unused permissions, and scoping policies to specific
+  resources and conditions. Reduces the blast radius of compromised
+  credentials.
+aws_services:
+  - AWS IAM
+  - AWS IAM Access Analyzer
+counters:
+  - T1059.009
+  - T1199.A002
+  - T1087.004
+  - T1538
+d3fend_ref: d3f:AuthorizationEnforcement
+attack_tactics:
+  - TA0002
+  - TA0007
+  - TA0008

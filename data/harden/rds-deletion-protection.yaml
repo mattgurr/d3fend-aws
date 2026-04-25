@@ -1,0 +1,16 @@
+id: D3FA-HD-0007
+name: RDS Deletion Protection
+tactic: harden
+category: Platform Hardening
+description: >
+  Enable deletion protection on RDS instances and clusters to prevent
+  accidental or malicious database destruction. Combined with automated
+  backups and snapshot retention to ensure recoverability.
+aws_services:
+  - Amazon RDS
+counters:
+  - T1485.A001
+  - T1486.A003
+d3fend_ref: d3f:PlatformHardening
+attack_tactics:
+  - TA0040

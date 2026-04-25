@@ -1,0 +1,19 @@
+id: D3FA-HD-0017
+name: Organizations Account Governance
+tactic: harden
+category: Access Control
+description: >
+  Restrict the ability to create, invite, or remove accounts from the
+  organization using SCPs and Organizations policies. Limit delegated
+  administrator access and enforce account creation through controlled
+  pipelines.
+aws_services:
+  - AWS Organizations
+counters:
+  - T1136.003
+  - T1666.A001
+  - T1666.A002
+d3fend_ref: d3f:AuthorizationEnforcement
+attack_tactics:
+  - TA0003
+  - TA0040

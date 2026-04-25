@@ -1,0 +1,21 @@
+id: D3FA-EV-0005
+name: S3 Bucket Policy Lockdown
+tactic: evict
+category: Resource Eviction
+description: >
+  Apply a restrictive bucket policy that denies all access except from a
+  trusted incident response principal. Prevents ongoing data exfiltration,
+  further object manipulation, or ransomware encryption of bucket contents
+  during an active incident.
+aws_services:
+  - Amazon S3
+counters:
+  - T1530.A001
+  - T1485.A003
+  - T1486.A001
+  - T1619.A001
+d3fend_ref: d3f:NetworkIsolation
+attack_tactics:
+  - TA0007
+  - TA0009
+  - TA0040

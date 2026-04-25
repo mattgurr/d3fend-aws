@@ -1,0 +1,18 @@
+id: D3FA-DT-0009
+name: Lambda Invocation Monitoring
+tactic: detect
+category: Platform Monitoring
+description: >
+  Monitor Lambda API calls and invocation patterns to detect unauthorized
+  function execution, code injection via compromised packages, or abuse of
+  serverless compute.
+aws_services:
+  - AWS Lambda
+  - AWS CloudTrail
+counters:
+  - T1648.A001
+  - T1648.A002
+  - T1059.009
+d3fend_ref: d3f:PlatformMonitoring
+attack_tactics:
+  - TA0002

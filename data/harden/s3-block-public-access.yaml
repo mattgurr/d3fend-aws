@@ -1,0 +1,17 @@
+id: D3FA-HD-0005
+name: S3 Block Public Access
+tactic: harden
+category: Platform Hardening
+description: >
+  Enable S3 Block Public Access at the account level to prevent accidental
+  public exposure of S3 buckets and objects. Prevents bucket policies and
+  ACLs from granting public access.
+aws_services:
+  - Amazon S3
+counters:
+  - T1530.A001
+  - T1619.A001
+d3fend_ref: d3f:PlatformHardening
+attack_tactics:
+  - TA0007
+  - TA0009

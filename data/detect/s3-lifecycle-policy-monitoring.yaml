@@ -1,0 +1,16 @@
+id: D3FA-DT-0018
+name: S3 Lifecycle Policy Monitoring
+tactic: detect
+category: Platform Monitoring
+description: >
+  Monitor for creation or modification of S3 lifecycle rules that could be
+  used to trigger automated deletion of objects as a data destruction
+  technique.
+aws_services:
+  - Amazon S3
+  - AWS CloudTrail
+counters:
+  - T1485.001
+d3fend_ref: d3f:PlatformMonitoring
+attack_tactics:
+  - TA0040

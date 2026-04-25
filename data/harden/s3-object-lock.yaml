@@ -1,0 +1,17 @@
+id: D3FA-HD-0009
+name: S3 Object Lock
+tactic: harden
+category: Platform Hardening
+description: >
+  Enable S3 Object Lock in compliance or governance mode to create immutable
+  (WORM) storage that prevents object deletion or overwrite, protecting
+  against ransomware-style encryption and data destruction.
+aws_services:
+  - Amazon S3
+counters:
+  - T1485.A003
+  - T1485.001
+  - T1486.A001
+d3fend_ref: d3f:PlatformHardening
+attack_tactics:
+  - TA0040

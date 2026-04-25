@@ -1,0 +1,18 @@
+id: D3FA-EV-0003
+name: IAM Role Session Revocation
+tactic: evict
+category: Credential Eviction
+description: >
+  Revoke all active sessions for a compromised IAM role by attaching a
+  deny-all inline policy with an aws:TokenIssueTime condition. This
+  immediately invalidates all existing role session credentials without
+  deleting the role.
+aws_services:
+  - AWS IAM
+counters:
+  - T1199.A002
+  - T1098.003
+d3fend_ref: d3f:CredentialRevocation
+attack_tactics:
+  - TA0004
+  - TA0008

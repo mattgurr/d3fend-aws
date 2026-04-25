@@ -1,0 +1,18 @@
+id: D3FA-HD-0003
+name: Security Group Least Privilege
+tactic: harden
+category: Platform Hardening
+description: >
+  Restrict security group rules to minimum required ports, protocols, and
+  source ranges. Remove overly permissive inbound rules (e.g. 0.0.0.0/0 on
+  management ports) and enforce least-privilege network access.
+aws_services:
+  - Amazon VPC
+  - Amazon EC2
+counters:
+  - T1190.A019
+  - T1562.007
+d3fend_ref: d3f:PlatformHardening
+attack_tactics:
+  - TA0001
+  - TA0005

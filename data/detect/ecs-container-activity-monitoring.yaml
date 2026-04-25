@@ -1,0 +1,17 @@
+id: D3FA-DT-0020
+name: ECS Container Activity Monitoring
+tactic: detect
+category: Platform Monitoring
+description: >
+  Monitor ECS task and service events for unauthorized container launches,
+  resource-intensive tasks indicating compute hijacking, or unexpected
+  container image deployments.
+aws_services:
+  - Amazon ECS
+  - AWS CloudTrail
+  - Amazon CloudWatch Logs
+counters:
+  - T1496.A006
+d3fend_ref: d3f:PlatformMonitoring
+attack_tactics:
+  - TA0040
