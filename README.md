@@ -9,6 +9,17 @@ A structured dataset mapping [AWS Threat Technique Catalog](https://aws-samples.
 - **YAML data files** with JSON Schema validation — one file per defensive technique
 - **AWS-native only** — every defense references AWS services, not third-party tooling
 
+## Matrix View
+
+Browse the interactive matrix at **[mattgurr.github.io/d3fend-aws](https://mattgurr.github.io/d3fend-aws/)**
+
+To build the matrix page locally:
+
+```bash
+uv run --with pyyaml python scripts/build-matrix.py
+open docs/index.html
+```
+
 ## Quick Start
 
 ```
@@ -25,8 +36,7 @@ schema/
 ### Validate
 
 ```bash
-pip install pyyaml jsonschema
-python scripts/validate.py
+uv run --with pyyaml --with jsonschema python scripts/validate.py
 ```
 
 ## Technique Format

@@ -1,0 +1,854 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="dark">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>D3FEND-AWS Matrix</title>
+  <meta name="description" content="AWS-scoped defensive technique mappings modeled on MITRE D3FEND" />
+  <style>
+    *, *::before, *::after { margin: 0; padding: 0; box-sizing: border-box; }
+
+    :root {
+      --bg: #0a0a0a;
+      --surface: #141414;
+      --surface-2: #1a1a1a;
+      --border: #222;
+      --border-hover: #444;
+      --text: #e0e0e0;
+      --text-muted: #888;
+      --text-dim: #666;
+      --detect: #3b82f6;
+      --harden: #22c55e;
+      --evict: #ef4444;
+    }
+
+    body {
+      background: var(--bg);
+      color: var(--text);
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+      -webkit-font-smoothing: antialiased;
+      line-height: 1.5;
+    }
+
+    /* Header */
+    .header {
+      padding: 2rem 2rem 1.5rem;
+      border-bottom: 1px solid var(--border);
+    }
+    .header__inner {
+      max-width: 1600px;
+      margin: 0 auto;
+    }
+    .header h1 {
+      font-size: 1.5rem;
+      font-weight: 600;
+      letter-spacing: -0.02em;
+      margin-bottom: 0.25rem;
+    }
+    .header p {
+      color: var(--text-muted);
+      font-size: 0.875rem;
+    }
+    .header__stats {
+      display: flex;
+      gap: 1.5rem;
+      margin-top: 1rem;
+    }
+    .stat {
+      display: flex;
+      flex-direction: column;
+      gap: 0.125rem;
+    }
+    .stat__value {
+      font-size: 1.25rem;
+      font-weight: 600;
+    }
+    .stat__label {
+      font-size: 0.75rem;
+      color: var(--text-muted);
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+    }
+
+    /* Search */
+    .search-bar {
+      padding: 1rem 2rem;
+      border-bottom: 1px solid var(--border);
+      position: sticky;
+      top: 0;
+      background: var(--bg);
+      z-index: 10;
+    }
+    .search-bar__inner {
+      max-width: 1600px;
+      margin: 0 auto;
+    }
+    .search-input {
+      width: 100%;
+      max-width: 400px;
+      padding: 0.5rem 0.75rem;
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 6px;
+      color: var(--text);
+      font-size: 0.875rem;
+      outline: none;
+      transition: border-color 0.2s;
+    }
+    .search-input:focus {
+      border-color: var(--border-hover);
+    }
+    .search-input::placeholder {
+      color: var(--text-dim);
+    }
+
+    /* Matrix layout */
+    .matrix {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 1px;
+      background: var(--border);
+      max-width: 1600px;
+      margin: 0 auto;
+    }
+
+    /* Tactic column */
+    .tactic-column {
+      background: var(--bg);
+      min-width: 0;
+    }
+    .tactic-header {
+      padding: 1.25rem 1rem;
+      background: var(--surface);
+      position: sticky;
+      top: 49px;
+      z-index: 5;
+    }
+    .tactic-title {
+      font-size: 1.1rem;
+      font-weight: 600;
+      margin-bottom: 0.25rem;
+    }
+    .tactic-desc {
+      font-size: 0.75rem;
+      color: var(--text-muted);
+      margin-bottom: 0.5rem;
+    }
+    .tactic-count {
+      font-size: 0.7rem;
+      color: var(--text-dim);
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+    }
+    .tactic-cards {
+      padding: 0.5rem;
+      display: flex;
+      flex-direction: column;
+      gap: 0.5rem;
+    }
+
+    /* Cards */
+    .card {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      padding: 0.875rem;
+      cursor: pointer;
+      transition: border-color 0.2s, transform 0.15s;
+    }
+    .card:hover {
+      border-color: var(--border-hover);
+      transform: translateY(-1px);
+    }
+    .card.hidden {
+      display: none;
+    }
+    .card__id {
+      font-size: 0.7rem;
+      font-family: "SF Mono", "Fira Code", "Fira Mono", Menlo, monospace;
+      color: var(--text-dim);
+      margin-bottom: 0.25rem;
+    }
+    .card__name {
+      font-size: 0.85rem;
+      font-weight: 500;
+      margin-bottom: 0.25rem;
+    }
+    .card__category {
+      font-size: 0.7rem;
+      color: var(--text-muted);
+      margin-bottom: 0.5rem;
+    }
+    .card__services {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 0.25rem;
+      margin-bottom: 0.5rem;
+    }
+    .tag {
+      display: inline-block;
+      font-size: 0.65rem;
+      padding: 0.125rem 0.375rem;
+      border-radius: 4px;
+      background: var(--surface-2);
+      border: 1px solid var(--border);
+      color: var(--text-muted);
+      white-space: nowrap;
+    }
+    .card__counter-count {
+      font-size: 0.65rem;
+      color: var(--text-dim);
+    }
+
+    /* Modal / detail panel */
+    .overlay {
+      display: none;
+      position: fixed;
+      inset: 0;
+      background: rgba(0, 0, 0, 0.6);
+      z-index: 100;
+    }
+    .overlay.active {
+      display: block;
+    }
+    .detail-panel {
+      display: none;
+      position: fixed;
+      top: 0;
+      right: 0;
+      bottom: 0;
+      width: 520px;
+      max-width: 100vw;
+      background: var(--surface);
+      border-left: 1px solid var(--border);
+      z-index: 101;
+      overflow-y: auto;
+      padding: 2rem;
+      box-shadow: -8px 0 32px rgba(0, 0, 0, 0.4);
+    }
+    .detail-panel.active {
+      display: block;
+    }
+    .detail-panel__close {
+      position: absolute;
+      top: 1rem;
+      right: 1rem;
+      background: none;
+      border: 1px solid var(--border);
+      border-radius: 6px;
+      color: var(--text-muted);
+      font-size: 1.25rem;
+      cursor: pointer;
+      width: 32px;
+      height: 32px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      transition: border-color 0.2s;
+    }
+    .detail-panel__close:hover {
+      border-color: var(--border-hover);
+      color: var(--text);
+    }
+    .detail__id {
+      font-family: "SF Mono", "Fira Code", monospace;
+      font-size: 0.8rem;
+      color: var(--text-dim);
+      margin-bottom: 0.25rem;
+    }
+    .detail__tactic {
+      display: inline-block;
+      font-size: 0.7rem;
+      font-weight: 600;
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+      padding: 0.2rem 0.5rem;
+      border-radius: 4px;
+      margin-bottom: 0.75rem;
+    }
+    .detail__tactic--detect { background: rgba(59, 130, 246, 0.15); color: var(--detect); }
+    .detail__tactic--harden { background: rgba(34, 197, 94, 0.15); color: var(--harden); }
+    .detail__tactic--evict { background: rgba(239, 68, 68, 0.15); color: var(--evict); }
+    .detail__name {
+      font-size: 1.25rem;
+      font-weight: 600;
+      margin-bottom: 0.5rem;
+    }
+    .detail__category {
+      font-size: 0.85rem;
+      color: var(--text-muted);
+      margin-bottom: 1rem;
+    }
+    .detail__section {
+      margin-bottom: 1.25rem;
+    }
+    .detail__section-title {
+      font-size: 0.7rem;
+      font-weight: 600;
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+      color: var(--text-dim);
+      margin-bottom: 0.5rem;
+    }
+    .detail__description {
+      font-size: 0.85rem;
+      line-height: 1.6;
+      color: var(--text);
+    }
+    .detail__services {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 0.375rem;
+    }
+    .detail__services .tag {
+      font-size: 0.75rem;
+      padding: 0.2rem 0.5rem;
+    }
+    .detail__counters {
+      list-style: none;
+    }
+    .detail__counters li {
+      padding: 0.375rem 0;
+      border-bottom: 1px solid var(--border);
+      font-size: 0.8rem;
+    }
+    .detail__counters li:last-child {
+      border-bottom: none;
+    }
+    .detail__counter-id {
+      font-family: "SF Mono", "Fira Code", monospace;
+      color: var(--text-muted);
+      font-size: 0.75rem;
+    }
+    .detail__counter-name {
+      color: var(--text);
+    }
+    .detail__counter-tactic {
+      font-size: 0.65rem;
+      color: var(--text-dim);
+    }
+    .detail__d3fend {
+      font-family: "SF Mono", "Fira Code", monospace;
+      font-size: 0.8rem;
+      color: var(--text-muted);
+    }
+
+    /* Responsive */
+    @media (max-width: 900px) {
+      .matrix {
+        grid-template-columns: 1fr;
+      }
+      .tactic-header {
+        position: static;
+      }
+      .detail-panel {
+        width: 100vw;
+      }
+    }
+    @media (max-width: 600px) {
+      .header {
+        padding: 1.5rem 1rem 1rem;
+      }
+      .search-bar {
+        padding: 0.75rem 1rem;
+      }
+      .header__stats {
+        flex-wrap: wrap;
+        gap: 1rem;
+      }
+    }
+  </style>
+</head>
+<body>
+
+  <div class="header">
+    <div class="header__inner">
+      <h1>D3FEND-AWS Matrix</h1>
+      <p>AWS-native defensive techniques mapped to the AWS Threat Technique Catalog</p>
+      <div class="header__stats">
+        <div class="stat">
+          <span class="stat__value">48</span>
+          <span class="stat__label">Defensive Techniques</span>
+        </div>
+        <div class="stat">
+          <span class="stat__value">51/51</span>
+          <span class="stat__label">Attack Techniques Covered</span>
+        </div>
+        <div class="stat">
+          <span class="stat__value">20</span>
+          <span class="stat__label" style="color: var(--detect)">Detect</span>
+        </div>
+        <div class="stat">
+          <span class="stat__value">17</span>
+          <span class="stat__label" style="color: var(--harden)">Harden</span>
+        </div>
+        <div class="stat">
+          <span class="stat__value">11</span>
+          <span class="stat__label" style="color: var(--evict)">Evict</span>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="search-bar">
+    <div class="search-bar__inner">
+      <input
+        type="text"
+        class="search-input"
+        placeholder="Filter techniques... (name, service, ID)"
+        oninput="filterCards(this.value)"
+      />
+    </div>
+  </div>
+
+  <div class="matrix">
+      <div class="tactic-column">
+        <div class="tactic-header" style="border-top: 3px solid #3b82f6">
+          <h2 class="tactic-title">Detect</h2>
+          <p class="tactic-desc">Identify threats using AWS-native signals</p>
+          <span class="tactic-count">20 techniques</span>
+        </div>
+        <div class="tactic-cards">
+        <div class="card" data-id="D3FA-DT-0001" onclick="showDetail('D3FA-DT-0001')">
+          <div class="card__id">D3FA-DT-0001</div>
+          <div class="card__name">CloudTrail Management Event Analysis</div>
+          <div class="card__category">Platform Monitoring</div>
+          <div class="card__services"><span class="tag">AWS CloudTrail</span><span class="tag">Amazon CloudWatch Logs</span></div>
+          <div class="card__counter-count">7 attack techniques countered</div>
+        </div>
+        <div class="card" data-id="D3FA-DT-0002" onclick="showDetail('D3FA-DT-0002')">
+          <div class="card__id">D3FA-DT-0002</div>
+          <div class="card__name">GuardDuty Threat Detection</div>
+          <div class="card__category">Threat Detection</div>
+          <div class="card__services"><span class="tag">Amazon GuardDuty</span></div>
+          <div class="card__counter-count">6 attack techniques countered</div>
+        </div>
+        <div class="card" data-id="D3FA-DT-0003" onclick="showDetail('D3FA-DT-0003')">
+          <div class="card__id">D3FA-DT-0003</div>
+          <div class="card__name">VPC Flow Log Analysis</div>
+          <div class="card__category">Network Traffic Analysis</div>
+          <div class="card__services"><span class="tag">Amazon VPC</span><span class="tag">Amazon CloudWatch Logs</span></div>
+          <div class="card__counter-count">2 attack techniques countered</div>
+        </div>
+        <div class="card" data-id="D3FA-DT-0004" onclick="showDetail('D3FA-DT-0004')">
+          <div class="card__id">D3FA-DT-0004</div>
+          <div class="card__name">S3 Data Event Monitoring</div>
+          <div class="card__category">Platform Monitoring</div>
+          <div class="card__services"><span class="tag">AWS CloudTrail</span><span class="tag">Amazon S3</span></div>
+          <div class="card__counter-count">4 attack techniques countered</div>
+        </div>
+        <div class="card" data-id="D3FA-DT-0005" onclick="showDetail('D3FA-DT-0005')">
+          <div class="card__id">D3FA-DT-0005</div>
+          <div class="card__name">IAM Access Analyzer</div>
+          <div class="card__category">User Behavior Analysis</div>
+          <div class="card__services"><span class="tag">AWS IAM Access Analyzer</span></div>
+          <div class="card__counter-count">5 attack techniques countered</div>
+        </div>
+        <div class="card" data-id="D3FA-DT-0006" onclick="showDetail('D3FA-DT-0006')">
+          <div class="card__id">D3FA-DT-0006</div>
+          <div class="card__name">Billing and Cost Anomaly Detection</div>
+          <div class="card__category">Platform Monitoring</div>
+          <div class="card__services"><span class="tag">AWS Cost Anomaly Detection</span><span class="tag">AWS Budgets</span></div>
+          <div class="card__counter-count">8 attack techniques countered</div>
+        </div>
+        <div class="card" data-id="D3FA-DT-0007" onclick="showDetail('D3FA-DT-0007')">
+          <div class="card__id">D3FA-DT-0007</div>
+          <div class="card__name">Route 53 DNS Query Logging</div>
+          <div class="card__category">Network Traffic Analysis</div>
+          <div class="card__services"><span class="tag">Amazon Route 53</span><span class="tag">Amazon CloudWatch Logs</span></div>
+          <div class="card__counter-count">2 attack techniques countered</div>
+        </div>
+        <div class="card" data-id="D3FA-DT-0008" onclick="showDetail('D3FA-DT-0008')">
+          <div class="card__id">D3FA-DT-0008</div>
+          <div class="card__name">RDS Activity Monitoring</div>
+          <div class="card__category">Platform Monitoring</div>
+          <div class="card__services"><span class="tag">Amazon RDS</span><span class="tag">AWS CloudTrail</span></div>
+          <div class="card__counter-count">4 attack techniques countered</div>
+        </div>
+        <div class="card" data-id="D3FA-DT-0009" onclick="showDetail('D3FA-DT-0009')">
+          <div class="card__id">D3FA-DT-0009</div>
+          <div class="card__name">Lambda Invocation Monitoring</div>
+          <div class="card__category">Platform Monitoring</div>
+          <div class="card__services"><span class="tag">AWS Lambda</span><span class="tag">AWS CloudTrail</span></div>
+          <div class="card__counter-count">3 attack techniques countered</div>
+        </div>
+        <div class="card" data-id="D3FA-DT-0010" onclick="showDetail('D3FA-DT-0010')">
+          <div class="card__id">D3FA-DT-0010</div>
+          <div class="card__name">Organizations Event Monitoring</div>
+          <div class="card__category">Platform Monitoring</div>
+          <div class="card__services"><span class="tag">AWS Organizations</span><span class="tag">AWS CloudTrail</span></div>
+          <div class="card__counter-count">3 attack techniques countered</div>
+        </div>
+        <div class="card" data-id="D3FA-DT-0011" onclick="showDetail('D3FA-DT-0011')">
+          <div class="card__id">D3FA-DT-0011</div>
+          <div class="card__name">Cognito User Activity Monitoring</div>
+          <div class="card__category">User Behavior Analysis</div>
+          <div class="card__services"><span class="tag">Amazon Cognito</span></div>
+          <div class="card__counter-count">1 attack technique countered</div>
+        </div>
+        <div class="card" data-id="D3FA-DT-0012" onclick="showDetail('D3FA-DT-0012')">
+          <div class="card__id">D3FA-DT-0012</div>
+          <div class="card__name">EC2 Compute Activity Monitoring</div>
+          <div class="card__category">Platform Monitoring</div>
+          <div class="card__services"><span class="tag">Amazon EC2</span><span class="tag">AWS CloudTrail</span></div>
+          <div class="card__counter-count">7 attack techniques countered</div>
+        </div>
+        <div class="card" data-id="D3FA-DT-0013" onclick="showDetail('D3FA-DT-0013')">
+          <div class="card__id">D3FA-DT-0013</div>
+          <div class="card__name">SES and Messaging Service Monitoring</div>
+          <div class="card__category">Platform Monitoring</div>
+          <div class="card__services"><span class="tag">Amazon SES</span><span class="tag">Amazon SNS</span><span class="tag">AWS CloudTrail</span></div>
+          <div class="card__counter-count">2 attack techniques countered</div>
+        </div>
+        <div class="card" data-id="D3FA-DT-0014" onclick="showDetail('D3FA-DT-0014')">
+          <div class="card__id">D3FA-DT-0014</div>
+          <div class="card__name">Bedrock Model Invocation Monitoring</div>
+          <div class="card__category">Platform Monitoring</div>
+          <div class="card__services"><span class="tag">Amazon Bedrock</span><span class="tag">AWS CloudTrail</span></div>
+          <div class="card__counter-count">1 attack technique countered</div>
+        </div>
+        <div class="card" data-id="D3FA-DT-0015" onclick="showDetail('D3FA-DT-0015')">
+          <div class="card__id">D3FA-DT-0015</div>
+          <div class="card__name">Support Case Activity Monitoring</div>
+          <div class="card__category">Platform Monitoring</div>
+          <div class="card__services"><span class="tag">AWS Support</span><span class="tag">AWS CloudTrail</span></div>
+          <div class="card__counter-count">1 attack technique countered</div>
+        </div>
+        <div class="card" data-id="D3FA-DT-0016" onclick="showDetail('D3FA-DT-0016')">
+          <div class="card__id">D3FA-DT-0016</div>
+          <div class="card__name">API Gateway Access Monitoring</div>
+          <div class="card__category">Platform Monitoring</div>
+          <div class="card__services"><span class="tag">Amazon API Gateway</span><span class="tag">Amazon CloudWatch Logs</span></div>
+          <div class="card__counter-count">1 attack technique countered</div>
+        </div>
+        <div class="card" data-id="D3FA-DT-0017" onclick="showDetail('D3FA-DT-0017')">
+          <div class="card__id">D3FA-DT-0017</div>
+          <div class="card__name">Account Access Change Monitoring</div>
+          <div class="card__category">User Behavior Analysis</div>
+          <div class="card__services"><span class="tag">AWS IAM</span><span class="tag">AWS CloudTrail</span></div>
+          <div class="card__counter-count">1 attack technique countered</div>
+        </div>
+        <div class="card" data-id="D3FA-DT-0018" onclick="showDetail('D3FA-DT-0018')">
+          <div class="card__id">D3FA-DT-0018</div>
+          <div class="card__name">S3 Lifecycle Policy Monitoring</div>
+          <div class="card__category">Platform Monitoring</div>
+          <div class="card__services"><span class="tag">Amazon S3</span><span class="tag">AWS CloudTrail</span></div>
+          <div class="card__counter-count">1 attack technique countered</div>
+        </div>
+        <div class="card" data-id="D3FA-DT-0019" onclick="showDetail('D3FA-DT-0019')">
+          <div class="card__id">D3FA-DT-0019</div>
+          <div class="card__name">Security Hub Findings Aggregation</div>
+          <div class="card__category">Threat Detection</div>
+          <div class="card__services"><span class="tag">AWS Security Hub</span></div>
+          <div class="card__counter-count">5 attack techniques countered</div>
+        </div>
+        <div class="card" data-id="D3FA-DT-0020" onclick="showDetail('D3FA-DT-0020')">
+          <div class="card__id">D3FA-DT-0020</div>
+          <div class="card__name">ECS Container Activity Monitoring</div>
+          <div class="card__category">Platform Monitoring</div>
+          <div class="card__services"><span class="tag">Amazon ECS</span><span class="tag">AWS CloudTrail</span><span class="tag">Amazon CloudWatch Logs</span></div>
+          <div class="card__counter-count">1 attack technique countered</div>
+        </div>
+        </div>
+      </div>
+      <div class="tactic-column">
+        <div class="tactic-header" style="border-top: 3px solid #22c55e">
+          <h2 class="tactic-title">Harden</h2>
+          <p class="tactic-desc">Preventive controls via AWS service configuration</p>
+          <span class="tactic-count">17 techniques</span>
+        </div>
+        <div class="tactic-cards">
+        <div class="card" data-id="D3FA-HD-0001" onclick="showDetail('D3FA-HD-0001')">
+          <div class="card__id">D3FA-HD-0001</div>
+          <div class="card__name">SCP Preventive Controls</div>
+          <div class="card__category">Access Control</div>
+          <div class="card__services"><span class="tag">AWS Organizations</span></div>
+          <div class="card__counter-count">5 attack techniques countered</div>
+        </div>
+        <div class="card" data-id="D3FA-HD-0002" onclick="showDetail('D3FA-HD-0002')">
+          <div class="card__id">D3FA-HD-0002</div>
+          <div class="card__name">IAM MFA Enforcement</div>
+          <div class="card__category">Credential Hardening</div>
+          <div class="card__services"><span class="tag">AWS IAM</span></div>
+          <div class="card__counter-count">3 attack techniques countered</div>
+        </div>
+        <div class="card" data-id="D3FA-HD-0003" onclick="showDetail('D3FA-HD-0003')">
+          <div class="card__id">D3FA-HD-0003</div>
+          <div class="card__name">Security Group Least Privilege</div>
+          <div class="card__category">Platform Hardening</div>
+          <div class="card__services"><span class="tag">Amazon VPC</span><span class="tag">Amazon EC2</span></div>
+          <div class="card__counter-count">2 attack techniques countered</div>
+        </div>
+        <div class="card" data-id="D3FA-HD-0004" onclick="showDetail('D3FA-HD-0004')">
+          <div class="card__id">D3FA-HD-0004</div>
+          <div class="card__name">IMDSv2 Enforcement</div>
+          <div class="card__category">Platform Hardening</div>
+          <div class="card__services"><span class="tag">Amazon EC2</span></div>
+          <div class="card__counter-count">1 attack technique countered</div>
+        </div>
+        <div class="card" data-id="D3FA-HD-0005" onclick="showDetail('D3FA-HD-0005')">
+          <div class="card__id">D3FA-HD-0005</div>
+          <div class="card__name">S3 Block Public Access</div>
+          <div class="card__category">Platform Hardening</div>
+          <div class="card__services"><span class="tag">Amazon S3</span></div>
+          <div class="card__counter-count">2 attack techniques countered</div>
+        </div>
+        <div class="card" data-id="D3FA-HD-0006" onclick="showDetail('D3FA-HD-0006')">
+          <div class="card__id">D3FA-HD-0006</div>
+          <div class="card__name">Lambda Code Signing</div>
+          <div class="card__category">Application Hardening</div>
+          <div class="card__services"><span class="tag">AWS Lambda</span><span class="tag">AWS Signer</span></div>
+          <div class="card__counter-count">1 attack technique countered</div>
+        </div>
+        <div class="card" data-id="D3FA-HD-0007" onclick="showDetail('D3FA-HD-0007')">
+          <div class="card__id">D3FA-HD-0007</div>
+          <div class="card__name">RDS Deletion Protection</div>
+          <div class="card__category">Platform Hardening</div>
+          <div class="card__services"><span class="tag">Amazon RDS</span></div>
+          <div class="card__counter-count">2 attack techniques countered</div>
+        </div>
+        <div class="card" data-id="D3FA-HD-0008" onclick="showDetail('D3FA-HD-0008')">
+          <div class="card__id">D3FA-HD-0008</div>
+          <div class="card__name">EBS Default Encryption</div>
+          <div class="card__category">Platform Hardening</div>
+          <div class="card__services"><span class="tag">Amazon EC2</span><span class="tag">AWS KMS</span></div>
+          <div class="card__counter-count">2 attack techniques countered</div>
+        </div>
+        <div class="card" data-id="D3FA-HD-0009" onclick="showDetail('D3FA-HD-0009')">
+          <div class="card__id">D3FA-HD-0009</div>
+          <div class="card__name">S3 Object Lock</div>
+          <div class="card__category">Platform Hardening</div>
+          <div class="card__services"><span class="tag">Amazon S3</span></div>
+          <div class="card__counter-count">3 attack techniques countered</div>
+        </div>
+        <div class="card" data-id="D3FA-HD-0010" onclick="showDetail('D3FA-HD-0010')">
+          <div class="card__id">D3FA-HD-0010</div>
+          <div class="card__name">IAM Least Privilege</div>
+          <div class="card__category">Access Control</div>
+          <div class="card__services"><span class="tag">AWS IAM</span><span class="tag">AWS IAM Access Analyzer</span></div>
+          <div class="card__counter-count">4 attack techniques countered</div>
+        </div>
+        <div class="card" data-id="D3FA-HD-0011" onclick="showDetail('D3FA-HD-0011')">
+          <div class="card__id">D3FA-HD-0011</div>
+          <div class="card__name">Cognito Advanced Security</div>
+          <div class="card__category">Application Hardening</div>
+          <div class="card__services"><span class="tag">Amazon Cognito</span></div>
+          <div class="card__counter-count">1 attack technique countered</div>
+        </div>
+        <div class="card" data-id="D3FA-HD-0012" onclick="showDetail('D3FA-HD-0012')">
+          <div class="card__id">D3FA-HD-0012</div>
+          <div class="card__name">Resource Control Policies</div>
+          <div class="card__category">Access Control</div>
+          <div class="card__services"><span class="tag">AWS Organizations</span></div>
+          <div class="card__counter-count">2 attack techniques countered</div>
+        </div>
+        <div class="card" data-id="D3FA-HD-0013" onclick="showDetail('D3FA-HD-0013')">
+          <div class="card__id">D3FA-HD-0013</div>
+          <div class="card__name">Route 53 Domain Protection</div>
+          <div class="card__category">Platform Hardening</div>
+          <div class="card__services"><span class="tag">Amazon Route 53</span></div>
+          <div class="card__counter-count">2 attack techniques countered</div>
+        </div>
+        <div class="card" data-id="D3FA-HD-0014" onclick="showDetail('D3FA-HD-0014')">
+          <div class="card__id">D3FA-HD-0014</div>
+          <div class="card__name">AMI and Snapshot Protection</div>
+          <div class="card__category">Platform Hardening</div>
+          <div class="card__services"><span class="tag">Amazon EC2</span></div>
+          <div class="card__counter-count">2 attack techniques countered</div>
+        </div>
+        <div class="card" data-id="D3FA-HD-0015" onclick="showDetail('D3FA-HD-0015')">
+          <div class="card__id">D3FA-HD-0015</div>
+          <div class="card__name">AWS Budgets and Spending Controls</div>
+          <div class="card__category">Platform Hardening</div>
+          <div class="card__services"><span class="tag">AWS Budgets</span><span class="tag">AWS Cost Explorer</span></div>
+          <div class="card__counter-count">8 attack techniques countered</div>
+        </div>
+        <div class="card" data-id="D3FA-HD-0016" onclick="showDetail('D3FA-HD-0016')">
+          <div class="card__id">D3FA-HD-0016</div>
+          <div class="card__name">Config Rules Compliance</div>
+          <div class="card__category">Configuration Management</div>
+          <div class="card__services"><span class="tag">AWS Config</span></div>
+          <div class="card__counter-count">3 attack techniques countered</div>
+        </div>
+        <div class="card" data-id="D3FA-HD-0017" onclick="showDetail('D3FA-HD-0017')">
+          <div class="card__id">D3FA-HD-0017</div>
+          <div class="card__name">Organizations Account Governance</div>
+          <div class="card__category">Access Control</div>
+          <div class="card__services"><span class="tag">AWS Organizations</span></div>
+          <div class="card__counter-count">3 attack techniques countered</div>
+        </div>
+        </div>
+      </div>
+      <div class="tactic-column">
+        <div class="tactic-header" style="border-top: 3px solid #ef4444">
+          <h2 class="tactic-title">Evict</h2>
+          <p class="tactic-desc">Contain and remove threats during incidents</p>
+          <span class="tactic-count">11 techniques</span>
+        </div>
+        <div class="tactic-cards">
+        <div class="card" data-id="D3FA-EV-0001" onclick="showDetail('D3FA-EV-0001')">
+          <div class="card__id">D3FA-EV-0001</div>
+          <div class="card__name">IAM Credential Revocation</div>
+          <div class="card__category">Credential Eviction</div>
+          <div class="card__services"><span class="tag">AWS IAM</span></div>
+          <div class="card__counter-count">5 attack techniques countered</div>
+        </div>
+        <div class="card" data-id="D3FA-EV-0002" onclick="showDetail('D3FA-EV-0002')">
+          <div class="card__id">D3FA-EV-0002</div>
+          <div class="card__name">EC2 Instance Isolation</div>
+          <div class="card__category">Resource Eviction</div>
+          <div class="card__services"><span class="tag">Amazon EC2</span><span class="tag">Amazon VPC</span></div>
+          <div class="card__counter-count">4 attack techniques countered</div>
+        </div>
+        <div class="card" data-id="D3FA-EV-0003" onclick="showDetail('D3FA-EV-0003')">
+          <div class="card__id">D3FA-EV-0003</div>
+          <div class="card__name">IAM Role Session Revocation</div>
+          <div class="card__category">Credential Eviction</div>
+          <div class="card__services"><span class="tag">AWS IAM</span></div>
+          <div class="card__counter-count">2 attack techniques countered</div>
+        </div>
+        <div class="card" data-id="D3FA-EV-0004" onclick="showDetail('D3FA-EV-0004')">
+          <div class="card__id">D3FA-EV-0004</div>
+          <div class="card__name">Lambda Function Disable</div>
+          <div class="card__category">Resource Eviction</div>
+          <div class="card__services"><span class="tag">AWS Lambda</span></div>
+          <div class="card__counter-count">3 attack techniques countered</div>
+        </div>
+        <div class="card" data-id="D3FA-EV-0005" onclick="showDetail('D3FA-EV-0005')">
+          <div class="card__id">D3FA-EV-0005</div>
+          <div class="card__name">S3 Bucket Policy Lockdown</div>
+          <div class="card__category">Resource Eviction</div>
+          <div class="card__services"><span class="tag">Amazon S3</span></div>
+          <div class="card__counter-count">4 attack techniques countered</div>
+        </div>
+        <div class="card" data-id="D3FA-EV-0006" onclick="showDetail('D3FA-EV-0006')">
+          <div class="card__id">D3FA-EV-0006</div>
+          <div class="card__name">RDS Instance Isolation</div>
+          <div class="card__category">Resource Eviction</div>
+          <div class="card__services"><span class="tag">Amazon RDS</span><span class="tag">Amazon VPC</span></div>
+          <div class="card__counter-count">3 attack techniques countered</div>
+        </div>
+        <div class="card" data-id="D3FA-EV-0007" onclick="showDetail('D3FA-EV-0007')">
+          <div class="card__id">D3FA-EV-0007</div>
+          <div class="card__name">Account Quarantine</div>
+          <div class="card__category">Account Eviction</div>
+          <div class="card__services"><span class="tag">AWS Organizations</span></div>
+          <div class="card__counter-count">3 attack techniques countered</div>
+        </div>
+        <div class="card" data-id="D3FA-EV-0008" onclick="showDetail('D3FA-EV-0008')">
+          <div class="card__id">D3FA-EV-0008</div>
+          <div class="card__name">Security Group Emergency Lockdown</div>
+          <div class="card__category">Resource Eviction</div>
+          <div class="card__services"><span class="tag">Amazon VPC</span><span class="tag">Amazon EC2</span></div>
+          <div class="card__counter-count">3 attack techniques countered</div>
+        </div>
+        <div class="card" data-id="D3FA-EV-0009" onclick="showDetail('D3FA-EV-0009')">
+          <div class="card__id">D3FA-EV-0009</div>
+          <div class="card__name">Compute Resource Termination</div>
+          <div class="card__category">Resource Eviction</div>
+          <div class="card__services"><span class="tag">Amazon EC2</span><span class="tag">Amazon ECS</span><span class="tag">Amazon WorkSpaces</span></div>
+          <div class="card__counter-count">6 attack techniques countered</div>
+        </div>
+        <div class="card" data-id="D3FA-EV-0010" onclick="showDetail('D3FA-EV-0010')">
+          <div class="card__id">D3FA-EV-0010</div>
+          <div class="card__name">Cognito Session Invalidation</div>
+          <div class="card__category">Credential Eviction</div>
+          <div class="card__services"><span class="tag">Amazon Cognito</span></div>
+          <div class="card__counter-count">1 attack technique countered</div>
+        </div>
+        <div class="card" data-id="D3FA-EV-0011" onclick="showDetail('D3FA-EV-0011')">
+          <div class="card__id">D3FA-EV-0011</div>
+          <div class="card__name">SES Sending Suspension</div>
+          <div class="card__category">Resource Eviction</div>
+          <div class="card__services"><span class="tag">Amazon SES</span></div>
+          <div class="card__counter-count">2 attack techniques countered</div>
+        </div>
+        </div>
+      </div>
+  </div>
+
+  <div class="overlay" id="overlay" onclick="closeDetail()"></div>
+  <div class="detail-panel" id="detail">
+    <button class="detail-panel__close" onclick="closeDetail()">&times;</button>
+    <div id="detail-content"></div>
+  </div>
+
+  <script>
+    const techniques = {"D3FA-DT-0001": {"id": "D3FA-DT-0001", "name": "CloudTrail Management Event Analysis", "tactic": "detect", "category": "Platform Monitoring", "description": "Analyze CloudTrail management events to detect unauthorized API activity such as credential abuse, privilege escalation, or attempts to disable security controls. Management events capture control plane operations across all AWS services.", "aws_services": ["AWS CloudTrail", "Amazon CloudWatch Logs"], "counters": [{"id": "T1078.A001", "name": "Valid Accounts - IAM Users", "tactic": "Defense Evasion"}, {"id": "T1078.A002", "name": "Valid Accounts - Account Root User", "tactic": "Defense Evasion"}, {"id": "T1098.001", "name": "Additional Cloud Credentials", "tactic": "Privilege Escalation"}, {"id": "T1098.003", "name": "Additional Cloud Roles", "tactic": "Privilege Escalation"}, {"id": "T1562.008", "name": "Disable Cloud Logs", "tactic": "Defense Evasion"}, {"id": "T1562.A001", "name": "Disable or Modify GuardDuty", "tactic": "Defense Evasion"}, {"id": "T1070.A001", "name": "Delete IAM Entities", "tactic": "Defense Evasion"}], "d3fend_ref": "d3f:PlatformMonitoring"}, "D3FA-DT-0002": {"id": "D3FA-DT-0002", "name": "GuardDuty Threat Detection", "tactic": "detect", "category": "Threat Detection", "description": "Use Amazon GuardDuty to continuously monitor for malicious activity and anomalous behavior across AWS accounts. GuardDuty analyzes CloudTrail management and data events, VPC Flow Logs, and DNS logs to identify threats such as credential compromise, instance compromise, and unauthorized access.", "aws_services": ["Amazon GuardDuty"], "counters": [{"id": "T1078.A001", "name": "Valid Accounts - IAM Users", "tactic": "Defense Evasion"}, {"id": "T1078.A002", "name": "Valid Accounts - Account Root User", "tactic": "Defense Evasion"}, {"id": "T1190.A016", "name": "EC2 Hosted Application Compromise", "tactic": "Initial Access"}, {"id": "T1496.001", "name": "Compute Hijacking", "tactic": "Impact"}, {"id": "T1496.A008", "name": "Compute Hijacking - EC2 Use", "tactic": "Impact"}, {"id": "T1552.005", "name": "Cloud Instance Metadata API", "tactic": "Credential Access"}], "d3fend_ref": "d3f:PlatformMonitoring"}, "D3FA-DT-0003": {"id": "D3FA-DT-0003", "name": "VPC Flow Log Analysis", "tactic": "detect", "category": "Network Traffic Analysis", "description": "Analyze VPC Flow Logs for anomalous network patterns such as unexpected outbound connections, port scanning, or lateral movement between instances.", "aws_services": ["Amazon VPC", "Amazon CloudWatch Logs"], "counters": [{"id": "T1190.A019", "name": "Overly Permissive VPC Security Groups", "tactic": "Initial Access"}, {"id": "T1190.A016", "name": "EC2 Hosted Application Compromise", "tactic": "Initial Access"}], "d3fend_ref": "d3f:NetworkTrafficAnalysis"}, "D3FA-DT-0004": {"id": "D3FA-DT-0004", "name": "S3 Data Event Monitoring", "tactic": "detect", "category": "Platform Monitoring", "description": "Monitor CloudTrail S3 data events to detect unauthorized object access, enumeration, bulk downloads, or deletion activity.", "aws_services": ["AWS CloudTrail", "Amazon S3"], "counters": [{"id": "T1530.A001", "name": "S3 Object Collection", "tactic": "Collection"}, {"id": "T1619.A001", "name": "S3 Object and Bucket Enumeration", "tactic": "Discovery"}, {"id": "T1485.A003", "name": "S3 Object and Bucket Deletion", "tactic": "Impact"}, {"id": "T1486.A001", "name": "S3 Encryption - SSE-C Key Encryption", "tactic": "Impact"}], "d3fend_ref": "d3f:PlatformMonitoring"}, "D3FA-DT-0005": {"id": "D3FA-DT-0005", "name": "IAM Access Analyzer", "tactic": "detect", "category": "User Behavior Analysis", "description": "Use IAM Access Analyzer to detect resource policies granting access to external principals, unused permissions, and overly permissive cross-account trust relationships.", "aws_services": ["AWS IAM Access Analyzer"], "counters": [{"id": "T1199.A002", "name": "Role Assumption and Federated Access", "tactic": "Lateral Movement"}, {"id": "T1098.001", "name": "Additional Cloud Credentials", "tactic": "Privilege Escalation"}, {"id": "T1098.003", "name": "Additional Cloud Roles", "tactic": "Privilege Escalation"}, {"id": "T1136.003", "name": "Create Cloud Account", "tactic": "Persistence"}, {"id": "T1484.002", "name": "Trust Modification", "tactic": "Persistence"}], "d3fend_ref": "d3f:AuthorizationEventThresholding"}, "D3FA-DT-0006": {"id": "D3FA-DT-0006", "name": "Billing and Cost Anomaly Detection", "tactic": "detect", "category": "Platform Monitoring", "description": "Monitor for unexpected cost spikes that indicate compute hijacking, service abuse, or SMS pumping via billing anomaly alerts and budget threshold notifications.", "aws_services": ["AWS Cost Anomaly Detection", "AWS Budgets"], "counters": [{"id": "T1496.001", "name": "Compute Hijacking", "tactic": "Impact"}, {"id": "T1496.003", "name": "SMS Pumping", "tactic": "Impact"}, {"id": "T1496.004", "name": "Cloud Service Hijacking", "tactic": "Impact"}, {"id": "T1496.A001", "name": "Cloud Service Hijacking - SES Messaging", "tactic": "Impact"}, {"id": "T1496.A006", "name": "Compute Hijacking - ECS", "tactic": "Impact"}, {"id": "T1496.A007", "name": "Cloud Service Hijacking - Bedrock LLM Abuse", "tactic": "Impact"}, {"id": "T1496.A008", "name": "Compute Hijacking - EC2 Use", "tactic": "Impact"}, {"id": "T1496.A009", "name": "Compute Hijacking - WorkSpaces", "tactic": "Impact"}], "d3fend_ref": "d3f:PlatformMonitoring"}, "D3FA-DT-0007": {"id": "D3FA-DT-0007", "name": "Route 53 DNS Query Logging", "tactic": "detect", "category": "Network Traffic Analysis", "description": "Log and analyze DNS queries resolved through Route 53 to detect domain acquisition reconnaissance, command-and-control communication, or subdomain takeover indicators.", "aws_services": ["Amazon Route 53", "Amazon CloudWatch Logs"], "counters": [{"id": "T1583.001", "name": "Acquire Infrastructure - Domains", "tactic": "Resource Development"}, {"id": "T1491.A001", "name": "Subdomain Takeover", "tactic": "Impact"}], "d3fend_ref": "d3f:DNSTrafficAnalysis"}, "D3FA-DT-0008": {"id": "D3FA-DT-0008", "name": "RDS Activity Monitoring", "tactic": "detect", "category": "Platform Monitoring", "description": "Monitor RDS API events and database activity streams to detect unauthorized database discovery, instance modification, snapshot export, or destruction of database resources.", "aws_services": ["Amazon RDS", "AWS CloudTrail"], "counters": [{"id": "AT1023.001", "name": "Query RDS", "tactic": "Discovery"}, {"id": "T1213.A013", "name": "RDS Instance Manipulation", "tactic": "Collection"}, {"id": "T1485.A001", "name": "RDS Instances and Backups Destruction", "tactic": "Impact"}, {"id": "T1486.A003", "name": "RDS Data Encryption", "tactic": "Impact"}], "d3fend_ref": "d3f:PlatformMonitoring"}, "D3FA-DT-0009": {"id": "D3FA-DT-0009", "name": "Lambda Invocation Monitoring", "tactic": "detect", "category": "Platform Monitoring", "description": "Monitor Lambda API calls and invocation patterns to detect unauthorized function execution, code injection via compromised packages, or abuse of serverless compute.", "aws_services": ["AWS Lambda", "AWS CloudTrail"], "counters": [{"id": "T1648.A001", "name": "Invoking Lambda Function", "tactic": "Execution"}, {"id": "T1648.A002", "name": "Malicious Code from Compromised Third Party Packages", "tactic": "Execution"}, {"id": "T1059.009", "name": "Cloud API", "tactic": "Execution"}], "d3fend_ref": "d3f:PlatformMonitoring"}, "D3FA-DT-0010": {"id": "D3FA-DT-0010", "name": "Organizations Event Monitoring", "tactic": "detect", "category": "Platform Monitoring", "description": "Monitor CloudTrail events for AWS Organizations actions such as creating accounts, inviting accounts, modifying policies, or member accounts leaving the organization.", "aws_services": ["AWS Organizations", "AWS CloudTrail"], "counters": [{"id": "T1136.003", "name": "Create Cloud Account", "tactic": "Persistence"}, {"id": "T1666.A001", "name": "Create or Invite AWS Account", "tactic": "Impact"}, {"id": "T1666.A002", "name": "Leave AWS Organization", "tactic": "Impact"}], "d3fend_ref": "d3f:PlatformMonitoring"}, "D3FA-DT-0011": {"id": "D3FA-DT-0011", "name": "Cognito User Activity Monitoring", "tactic": "detect", "category": "User Behavior Analysis", "description": "Monitor Cognito user pool activity for anomalous authentication patterns such as refresh token abuse, mass token generation, or unexpected identity pool role mapping changes.", "aws_services": ["Amazon Cognito"], "counters": [{"id": "T1098.A006", "name": "Cognito Refresh Token Abuse", "tactic": "Persistence"}], "d3fend_ref": "d3f:UserBehaviorAnalysis"}, "D3FA-DT-0012": {"id": "D3FA-DT-0012", "name": "EC2 Compute Activity Monitoring", "tactic": "detect", "category": "Platform Monitoring", "description": "Monitor EC2 API events for unauthorized instance launches, snapshot creation or export, instance termination, or modification of compute configurations that indicate resource hijacking or evidence destruction.", "aws_services": ["Amazon EC2", "AWS CloudTrail"], "counters": [{"id": "T1578.001", "name": "Create Snapshot", "tactic": "Impact"}, {"id": "T1578.002", "name": "Create Cloud Instance", "tactic": "Impact"}, {"id": "T1578.003", "name": "Delete Cloud Instance", "tactic": "Impact"}, {"id": "T1578.005", "name": "Modify Cloud Compute Configurations", "tactic": "Impact"}, {"id": "T1485.A002", "name": "AMI Image Deletion", "tactic": "Impact"}, {"id": "T1486.A002", "name": "EC2/EBS Data Encryption", "tactic": "Impact"}, {"id": "T1496.A009", "name": "Compute Hijacking - WorkSpaces", "tactic": "Impact"}], "d3fend_ref": "d3f:PlatformMonitoring"}, "D3FA-DT-0013": {"id": "D3FA-DT-0013", "name": "SES and Messaging Service Monitoring", "tactic": "detect", "category": "Platform Monitoring", "description": "Monitor SES sending activity and SNS topic usage for anomalous volume or recipient patterns indicating email abuse, SMS pumping, or unauthorized messaging.", "aws_services": ["Amazon SES", "Amazon SNS", "AWS CloudTrail"], "counters": [{"id": "T1496.A001", "name": "Cloud Service Hijacking - SES Messaging", "tactic": "Impact"}, {"id": "T1496.003", "name": "SMS Pumping", "tactic": "Impact"}], "d3fend_ref": "d3f:PlatformMonitoring"}, "D3FA-DT-0014": {"id": "D3FA-DT-0014", "name": "Bedrock Model Invocation Monitoring", "tactic": "detect", "category": "Platform Monitoring", "description": "Monitor Bedrock model invocation logs for unauthorized LLM usage, unexpected volume spikes, or invocations from unusual principals indicating service hijacking.", "aws_services": ["Amazon Bedrock", "AWS CloudTrail"], "counters": [{"id": "T1496.A007", "name": "Cloud Service Hijacking - Bedrock LLM Abuse", "tactic": "Impact"}], "d3fend_ref": "d3f:PlatformMonitoring"}, "D3FA-DT-0015": {"id": "D3FA-DT-0015", "name": "Support Case Activity Monitoring", "tactic": "detect", "category": "Platform Monitoring", "description": "Monitor AWS Support API events to detect unauthorized support case closure or modification that could be used to suppress security-related cases or hide malicious activity.", "aws_services": ["AWS Support", "AWS CloudTrail"], "counters": [{"id": "T1098.A001", "name": "AWS Support Case Closure", "tactic": "Persistence"}], "d3fend_ref": "d3f:PlatformMonitoring"}, "D3FA-DT-0016": {"id": "D3FA-DT-0016", "name": "API Gateway Access Monitoring", "tactic": "detect", "category": "Platform Monitoring", "description": "Monitor API Gateway access logs and execution logs for anomalous request patterns indicating API abuse, data exfiltration through public APIs, or unauthorized endpoint access.", "aws_services": ["Amazon API Gateway", "Amazon CloudWatch Logs"], "counters": [{"id": "AT1667.001", "name": "API Gateway Abuse", "tactic": "Collection"}], "d3fend_ref": "d3f:PlatformMonitoring"}, "D3FA-DT-0017": {"id": "D3FA-DT-0017", "name": "Account Access Change Monitoring", "tactic": "detect", "category": "User Behavior Analysis", "description": "Monitor for IAM actions that remove user access such as deleting login profiles, deactivating MFA, removing users from groups, or revoking permissions \u2014 indicators of account access removal attacks.", "aws_services": ["AWS IAM", "AWS CloudTrail"], "counters": [{"id": "T1531", "name": "Account Access Removal", "tactic": "Impact"}], "d3fend_ref": "d3f:UserBehaviorAnalysis"}, "D3FA-DT-0018": {"id": "D3FA-DT-0018", "name": "S3 Lifecycle Policy Monitoring", "tactic": "detect", "category": "Platform Monitoring", "description": "Monitor for creation or modification of S3 lifecycle rules that could be used to trigger automated deletion of objects as a data destruction technique.", "aws_services": ["Amazon S3", "AWS CloudTrail"], "counters": [{"id": "T1485.001", "name": "Lifecycle-Triggered Deletion", "tactic": "Impact"}], "d3fend_ref": "d3f:PlatformMonitoring"}, "D3FA-DT-0019": {"id": "D3FA-DT-0019", "name": "Security Hub Findings Aggregation", "tactic": "detect", "category": "Threat Detection", "description": "Aggregate and correlate security findings from GuardDuty, IAM Access Analyzer, Macie, Inspector, Config, and Firewall Manager into a single pane for cross-service threat detection and compliance monitoring.", "aws_services": ["AWS Security Hub"], "counters": [{"id": "T1078.A001", "name": "Valid Accounts - IAM Users", "tactic": "Defense Evasion"}, {"id": "T1078.A002", "name": "Valid Accounts - Account Root User", "tactic": "Defense Evasion"}, {"id": "T1190.A016", "name": "EC2 Hosted Application Compromise", "tactic": "Initial Access"}, {"id": "T1552.005", "name": "Cloud Instance Metadata API", "tactic": "Credential Access"}, {"id": "T1562.008", "name": "Disable Cloud Logs", "tactic": "Defense Evasion"}], "d3fend_ref": "d3f:PlatformMonitoring"}, "D3FA-DT-0020": {"id": "D3FA-DT-0020", "name": "ECS Container Activity Monitoring", "tactic": "detect", "category": "Platform Monitoring", "description": "Monitor ECS task and service events for unauthorized container launches, resource-intensive tasks indicating compute hijacking, or unexpected container image deployments.", "aws_services": ["Amazon ECS", "AWS CloudTrail", "Amazon CloudWatch Logs"], "counters": [{"id": "T1496.A006", "name": "Compute Hijacking - ECS", "tactic": "Impact"}], "d3fend_ref": "d3f:PlatformMonitoring"}, "D3FA-HD-0001": {"id": "D3FA-HD-0001", "name": "SCP Preventive Controls", "tactic": "harden", "category": "Access Control", "description": "Apply Service Control Policies at the AWS Organizations level to enforce preventive guardrails that restrict dangerous actions such as disabling CloudTrail, modifying GuardDuty, or leaving the organization. SCPs act as a permissions boundary that no IAM principal in a member account can exceed.", "aws_services": ["AWS Organizations"], "counters": [{"id": "T1562.008", "name": "Disable Cloud Logs", "tactic": "Defense Evasion"}, {"id": "T1562.A001", "name": "Disable or Modify GuardDuty", "tactic": "Defense Evasion"}, {"id": "T1562.007", "name": "Disable or Modify Cloud Firewall", "tactic": "Defense Evasion"}, {"id": "T1666.A002", "name": "Leave AWS Organization", "tactic": "Impact"}, {"id": "T1484.002", "name": "Trust Modification", "tactic": "Persistence"}], "d3fend_ref": "d3f:AuthorizationEnforcement"}, "D3FA-HD-0002": {"id": "D3FA-HD-0002", "name": "IAM MFA Enforcement", "tactic": "harden", "category": "Credential Hardening", "description": "Enforce multi-factor authentication for IAM users, especially for privileged operations and console access. Apply IAM policies that deny actions unless MFA is present in the request context. Require hardware or virtual MFA for the root user.", "aws_services": ["AWS IAM"], "counters": [{"id": "T1078.A001", "name": "Valid Accounts - IAM Users", "tactic": "Defense Evasion"}, {"id": "T1078.A002", "name": "Valid Accounts - Account Root User", "tactic": "Defense Evasion"}, {"id": "T1552.001", "name": "Credentials In Files", "tactic": "Credential Access"}], "d3fend_ref": "d3f:Multi-factorAuthentication"}, "D3FA-HD-0003": {"id": "D3FA-HD-0003", "name": "Security Group Least Privilege", "tactic": "harden", "category": "Platform Hardening", "description": "Restrict security group rules to minimum required ports, protocols, and source ranges. Remove overly permissive inbound rules (e.g. 0.0.0.0/0 on management ports) and enforce least-privilege network access.", "aws_services": ["Amazon VPC", "Amazon EC2"], "counters": [{"id": "T1190.A019", "name": "Overly Permissive VPC Security Groups", "tactic": "Initial Access"}, {"id": "T1562.007", "name": "Disable or Modify Cloud Firewall", "tactic": "Defense Evasion"}], "d3fend_ref": "d3f:PlatformHardening"}, "D3FA-HD-0004": {"id": "D3FA-HD-0004", "name": "IMDSv2 Enforcement", "tactic": "harden", "category": "Platform Hardening", "description": "Enforce Instance Metadata Service v2 (IMDSv2) with required session tokens to prevent SSRF-based credential theft from the instance metadata endpoint. Disable IMDSv1 across all EC2 instances.", "aws_services": ["Amazon EC2"], "counters": [{"id": "T1552.005", "name": "Cloud Instance Metadata API", "tactic": "Credential Access"}], "d3fend_ref": "d3f:PlatformHardening"}, "D3FA-HD-0005": {"id": "D3FA-HD-0005", "name": "S3 Block Public Access", "tactic": "harden", "category": "Platform Hardening", "description": "Enable S3 Block Public Access at the account level to prevent accidental public exposure of S3 buckets and objects. Prevents bucket policies and ACLs from granting public access.", "aws_services": ["Amazon S3"], "counters": [{"id": "T1530.A001", "name": "S3 Object Collection", "tactic": "Collection"}, {"id": "T1619.A001", "name": "S3 Object and Bucket Enumeration", "tactic": "Discovery"}], "d3fend_ref": "d3f:PlatformHardening"}, "D3FA-HD-0006": {"id": "D3FA-HD-0006", "name": "Lambda Code Signing", "tactic": "harden", "category": "Application Hardening", "description": "Enforce code signing for Lambda functions using AWS Signer to prevent deployment of untrusted or tampered code from compromised packages or supply chain attacks.", "aws_services": ["AWS Lambda", "AWS Signer"], "counters": [{"id": "T1648.A002", "name": "Malicious Code from Compromised Third Party Packages", "tactic": "Execution"}], "d3fend_ref": "d3f:ApplicationHardening"}, "D3FA-HD-0007": {"id": "D3FA-HD-0007", "name": "RDS Deletion Protection", "tactic": "harden", "category": "Platform Hardening", "description": "Enable deletion protection on RDS instances and clusters to prevent accidental or malicious database destruction. Combined with automated backups and snapshot retention to ensure recoverability.", "aws_services": ["Amazon RDS"], "counters": [{"id": "T1485.A001", "name": "RDS Instances and Backups Destruction", "tactic": "Impact"}, {"id": "T1486.A003", "name": "RDS Data Encryption", "tactic": "Impact"}], "d3fend_ref": "d3f:PlatformHardening"}, "D3FA-HD-0008": {"id": "D3FA-HD-0008", "name": "EBS Default Encryption", "tactic": "harden", "category": "Platform Hardening", "description": "Enable EBS default encryption at the account level using customer-managed KMS keys. Prevents adversaries from creating unencrypted volumes and limits exposure of data on snapshots shared or exfiltrated from the account.", "aws_services": ["Amazon EC2", "AWS KMS"], "counters": [{"id": "T1486.A002", "name": "EC2/EBS Data Encryption", "tactic": "Impact"}, {"id": "T1578.001", "name": "Create Snapshot", "tactic": "Impact"}], "d3fend_ref": "d3f:DiskEncryption"}, "D3FA-HD-0009": {"id": "D3FA-HD-0009", "name": "S3 Object Lock", "tactic": "harden", "category": "Platform Hardening", "description": "Enable S3 Object Lock in compliance or governance mode to create immutable (WORM) storage that prevents object deletion or overwrite, protecting against ransomware-style encryption and data destruction.", "aws_services": ["Amazon S3"], "counters": [{"id": "T1485.A003", "name": "S3 Object and Bucket Deletion", "tactic": "Impact"}, {"id": "T1485.001", "name": "Lifecycle-Triggered Deletion", "tactic": "Impact"}, {"id": "T1486.A001", "name": "S3 Encryption - SSE-C Key Encryption", "tactic": "Impact"}], "d3fend_ref": "d3f:PlatformHardening"}, "D3FA-HD-0010": {"id": "D3FA-HD-0010", "name": "IAM Least Privilege", "tactic": "harden", "category": "Access Control", "description": "Enforce least-privilege IAM policies by using IAM Access Analyzer policy generation, removing unused permissions, and scoping policies to specific resources and conditions. Reduces the blast radius of compromised credentials.", "aws_services": ["AWS IAM", "AWS IAM Access Analyzer"], "counters": [{"id": "T1059.009", "name": "Cloud API", "tactic": "Execution"}, {"id": "T1199.A002", "name": "Role Assumption and Federated Access", "tactic": "Lateral Movement"}, {"id": "T1087.004", "name": "Cloud Account Discovery", "tactic": "Discovery"}, {"id": "T1538", "name": "Cloud Service Dashboard", "tactic": "Discovery"}], "d3fend_ref": "d3f:AuthorizationEnforcement"}, "D3FA-HD-0011": {"id": "D3FA-HD-0011", "name": "Cognito Advanced Security", "tactic": "harden", "category": "Application Hardening", "description": "Enable Cognito Advanced Security features including compromised credential detection, adaptive authentication, and token abuse prevention to harden user pools against credential-based attacks.", "aws_services": ["Amazon Cognito"], "counters": [{"id": "T1098.A006", "name": "Cognito Refresh Token Abuse", "tactic": "Persistence"}], "d3fend_ref": "d3f:ApplicationHardening"}, "D3FA-HD-0012": {"id": "D3FA-HD-0012", "name": "Resource Control Policies", "tactic": "harden", "category": "Access Control", "description": "Apply Resource Control Policies at the organization level to restrict which external principals can access resources within member accounts, preventing unauthorized cross-account access regardless of resource-level policies.", "aws_services": ["AWS Organizations"], "counters": [{"id": "T1530.A001", "name": "S3 Object Collection", "tactic": "Collection"}, {"id": "T1199.A002", "name": "Role Assumption and Federated Access", "tactic": "Lateral Movement"}], "d3fend_ref": "d3f:AuthorizationEnforcement"}, "D3FA-HD-0013": {"id": "D3FA-HD-0013", "name": "Route 53 Domain Protection", "tactic": "harden", "category": "Platform Hardening", "description": "Enable domain transfer lock, DNSSEC signing, and registrar lock on Route 53 registered domains. Monitor for dangling DNS records pointing to decommissioned resources that enable subdomain takeover.", "aws_services": ["Amazon Route 53"], "counters": [{"id": "T1583.001", "name": "Acquire Infrastructure - Domains", "tactic": "Resource Development"}, {"id": "T1491.A001", "name": "Subdomain Takeover", "tactic": "Impact"}], "d3fend_ref": "d3f:PlatformHardening"}, "D3FA-HD-0014": {"id": "D3FA-HD-0014", "name": "AMI and Snapshot Protection", "tactic": "harden", "category": "Platform Hardening", "description": "Apply tag-based resource policies and SCPs to restrict AMI deregistration and snapshot deletion. Use Recycle Bin for EBS snapshots and AMIs to enable recovery of accidentally or maliciously deleted images.", "aws_services": ["Amazon EC2"], "counters": [{"id": "T1485.A002", "name": "AMI Image Deletion", "tactic": "Impact"}, {"id": "T1578.001", "name": "Create Snapshot", "tactic": "Impact"}], "d3fend_ref": "d3f:PlatformHardening"}, "D3FA-HD-0015": {"id": "D3FA-HD-0015", "name": "AWS Budgets and Spending Controls", "tactic": "harden", "category": "Platform Hardening", "description": "Configure budget thresholds with automated alerts and optional actions (e.g. apply restrictive SCPs) to limit financial exposure from compute hijacking, SMS pumping, or other resource abuse.", "aws_services": ["AWS Budgets", "AWS Cost Explorer"], "counters": [{"id": "T1496.001", "name": "Compute Hijacking", "tactic": "Impact"}, {"id": "T1496.003", "name": "SMS Pumping", "tactic": "Impact"}, {"id": "T1496.004", "name": "Cloud Service Hijacking", "tactic": "Impact"}, {"id": "T1496.A001", "name": "Cloud Service Hijacking - SES Messaging", "tactic": "Impact"}, {"id": "T1496.A006", "name": "Compute Hijacking - ECS", "tactic": "Impact"}, {"id": "T1496.A007", "name": "Cloud Service Hijacking - Bedrock LLM Abuse", "tactic": "Impact"}, {"id": "T1496.A008", "name": "Compute Hijacking - EC2 Use", "tactic": "Impact"}, {"id": "T1496.A009", "name": "Compute Hijacking - WorkSpaces", "tactic": "Impact"}], "d3fend_ref": "d3f:PlatformHardening"}, "D3FA-HD-0016": {"id": "D3FA-HD-0016", "name": "Config Rules Compliance", "tactic": "harden", "category": "Configuration Management", "description": "Deploy AWS Config rules and conformance packs to continuously evaluate resource configurations against security baselines. Detect and alert on non-compliant configurations such as unencrypted storage, public access, or missing logging.", "aws_services": ["AWS Config"], "counters": [{"id": "T1190.A019", "name": "Overly Permissive VPC Security Groups", "tactic": "Initial Access"}, {"id": "T1562.008", "name": "Disable Cloud Logs", "tactic": "Defense Evasion"}, {"id": "T1562.007", "name": "Disable or Modify Cloud Firewall", "tactic": "Defense Evasion"}], "d3fend_ref": "d3f:PlatformHardening"}, "D3FA-HD-0017": {"id": "D3FA-HD-0017", "name": "Organizations Account Governance", "tactic": "harden", "category": "Access Control", "description": "Restrict the ability to create, invite, or remove accounts from the organization using SCPs and Organizations policies. Limit delegated administrator access and enforce account creation through controlled pipelines.", "aws_services": ["AWS Organizations"], "counters": [{"id": "T1136.003", "name": "Create Cloud Account", "tactic": "Persistence"}, {"id": "T1666.A001", "name": "Create or Invite AWS Account", "tactic": "Impact"}, {"id": "T1666.A002", "name": "Leave AWS Organization", "tactic": "Impact"}], "d3fend_ref": "d3f:AuthorizationEnforcement"}, "D3FA-EV-0001": {"id": "D3FA-EV-0001", "name": "IAM Credential Revocation", "tactic": "evict", "category": "Credential Eviction", "description": "Deactivate or delete compromised IAM access keys, invalidate active sessions by applying a revoke-all-sessions inline policy, and reset console passwords. This is a primary containment action during credential compromise incidents to immediately cut off adversary access.", "aws_services": ["AWS IAM"], "counters": [{"id": "T1078.A001", "name": "Valid Accounts - IAM Users", "tactic": "Defense Evasion"}, {"id": "T1078.A002", "name": "Valid Accounts - Account Root User", "tactic": "Defense Evasion"}, {"id": "T1098.001", "name": "Additional Cloud Credentials", "tactic": "Privilege Escalation"}, {"id": "T1552.001", "name": "Credentials In Files", "tactic": "Credential Access"}, {"id": "T1552.005", "name": "Cloud Instance Metadata API", "tactic": "Credential Access"}], "d3fend_ref": "d3f:CredentialRevocation"}, "D3FA-EV-0002": {"id": "D3FA-EV-0002", "name": "EC2 Instance Isolation", "tactic": "evict", "category": "Resource Eviction", "description": "Isolate a compromised EC2 instance by replacing its security groups with a restrictive isolation group that denies all inbound and outbound traffic. Optionally capture a forensic snapshot of attached EBS volumes before termination. This contains lateral movement and stops active exploitation while preserving evidence.", "aws_services": ["Amazon EC2", "Amazon VPC"], "counters": [{"id": "T1190.A016", "name": "EC2 Hosted Application Compromise", "tactic": "Initial Access"}, {"id": "T1496.001", "name": "Compute Hijacking", "tactic": "Impact"}, {"id": "T1496.A008", "name": "Compute Hijacking - EC2 Use", "tactic": "Impact"}, {"id": "T1578.002", "name": "Create Cloud Instance", "tactic": "Impact"}], "d3fend_ref": "d3f:NetworkIsolation"}, "D3FA-EV-0003": {"id": "D3FA-EV-0003", "name": "IAM Role Session Revocation", "tactic": "evict", "category": "Credential Eviction", "description": "Revoke all active sessions for a compromised IAM role by attaching a deny-all inline policy with an aws:TokenIssueTime condition. This immediately invalidates all existing role session credentials without deleting the role.", "aws_services": ["AWS IAM"], "counters": [{"id": "T1199.A002", "name": "Role Assumption and Federated Access", "tactic": "Lateral Movement"}, {"id": "T1098.003", "name": "Additional Cloud Roles", "tactic": "Privilege Escalation"}], "d3fend_ref": "d3f:CredentialRevocation"}, "D3FA-EV-0004": {"id": "D3FA-EV-0004", "name": "Lambda Function Disable", "tactic": "evict", "category": "Resource Eviction", "description": "Disable a compromised or malicious Lambda function by setting its reserved concurrency to zero, removing event source mappings, or deleting the function. Prevents further serverless execution while preserving configuration for investigation.", "aws_services": ["AWS Lambda"], "counters": [{"id": "T1648.A001", "name": "Invoking Lambda Function", "tactic": "Execution"}, {"id": "T1648.A002", "name": "Malicious Code from Compromised Third Party Packages", "tactic": "Execution"}, {"id": "T1059.009", "name": "Cloud API", "tactic": "Execution"}], "d3fend_ref": "d3f:ProcessTermination"}, "D3FA-EV-0005": {"id": "D3FA-EV-0005", "name": "S3 Bucket Policy Lockdown", "tactic": "evict", "category": "Resource Eviction", "description": "Apply a restrictive bucket policy that denies all access except from a trusted incident response principal. Prevents ongoing data exfiltration, further object manipulation, or ransomware encryption of bucket contents during an active incident.", "aws_services": ["Amazon S3"], "counters": [{"id": "T1530.A001", "name": "S3 Object Collection", "tactic": "Collection"}, {"id": "T1485.A003", "name": "S3 Object and Bucket Deletion", "tactic": "Impact"}, {"id": "T1486.A001", "name": "S3 Encryption - SSE-C Key Encryption", "tactic": "Impact"}, {"id": "T1619.A001", "name": "S3 Object and Bucket Enumeration", "tactic": "Discovery"}], "d3fend_ref": "d3f:NetworkIsolation"}, "D3FA-EV-0006": {"id": "D3FA-EV-0006", "name": "RDS Instance Isolation", "tactic": "evict", "category": "Resource Eviction", "description": "Isolate a compromised RDS instance by modifying its security group to deny all inbound connections, disabling public accessibility, and taking a final snapshot for forensics. Prevents ongoing data access or destruction while preserving evidence.", "aws_services": ["Amazon RDS", "Amazon VPC"], "counters": [{"id": "AT1023.001", "name": "Query RDS", "tactic": "Discovery"}, {"id": "T1213.A013", "name": "RDS Instance Manipulation", "tactic": "Collection"}, {"id": "T1485.A001", "name": "RDS Instances and Backups Destruction", "tactic": "Impact"}], "d3fend_ref": "d3f:NetworkIsolation"}, "D3FA-EV-0007": {"id": "D3FA-EV-0007", "name": "Account Quarantine", "tactic": "evict", "category": "Account Eviction", "description": "Quarantine a compromised member account by moving it to a restricted OU with a deny-all SCP, preventing any API actions from within the account while maintaining organizational control and audit trail.", "aws_services": ["AWS Organizations"], "counters": [{"id": "T1531", "name": "Account Access Removal", "tactic": "Impact"}, {"id": "T1666.A001", "name": "Create or Invite AWS Account", "tactic": "Impact"}, {"id": "T1136.003", "name": "Create Cloud Account", "tactic": "Persistence"}], "d3fend_ref": "d3f:AccountLocking"}, "D3FA-EV-0008": {"id": "D3FA-EV-0008", "name": "Security Group Emergency Lockdown", "tactic": "evict", "category": "Resource Eviction", "description": "Replace all security groups on compromised resources with an isolation security group that has no inbound or outbound rules. This immediately cuts network access to and from affected instances while keeping them running for forensic analysis.", "aws_services": ["Amazon VPC", "Amazon EC2"], "counters": [{"id": "T1190.A019", "name": "Overly Permissive VPC Security Groups", "tactic": "Initial Access"}, {"id": "T1562.007", "name": "Disable or Modify Cloud Firewall", "tactic": "Defense Evasion"}, {"id": "T1190.A016", "name": "EC2 Hosted Application Compromise", "tactic": "Initial Access"}], "d3fend_ref": "d3f:NetworkIsolation"}, "D3FA-EV-0009": {"id": "D3FA-EV-0009", "name": "Compute Resource Termination", "tactic": "evict", "category": "Resource Eviction", "description": "Terminate or stop unauthorized compute resources being used for cryptomining, resource hijacking, or other abuse. Includes EC2 instances, ECS tasks, and WorkSpaces that were launched or compromised by an adversary.", "aws_services": ["Amazon EC2", "Amazon ECS", "Amazon WorkSpaces"], "counters": [{"id": "T1496.001", "name": "Compute Hijacking", "tactic": "Impact"}, {"id": "T1496.A006", "name": "Compute Hijacking - ECS", "tactic": "Impact"}, {"id": "T1496.A008", "name": "Compute Hijacking - EC2 Use", "tactic": "Impact"}, {"id": "T1496.A009", "name": "Compute Hijacking - WorkSpaces", "tactic": "Impact"}, {"id": "T1578.002", "name": "Create Cloud Instance", "tactic": "Impact"}, {"id": "T1578.005", "name": "Modify Cloud Compute Configurations", "tactic": "Impact"}], "d3fend_ref": "d3f:ProcessTermination"}, "D3FA-EV-0010": {"id": "D3FA-EV-0010", "name": "Cognito Session Invalidation", "tactic": "evict", "category": "Credential Eviction", "description": "Invalidate compromised Cognito user sessions by globally signing out the user, revoking refresh tokens, and disabling the user account. Prevents continued abuse of stolen Cognito tokens.", "aws_services": ["Amazon Cognito"], "counters": [{"id": "T1098.A006", "name": "Cognito Refresh Token Abuse", "tactic": "Persistence"}], "d3fend_ref": "d3f:CredentialRevocation"}, "D3FA-EV-0011": {"id": "D3FA-EV-0011", "name": "SES Sending Suspension", "tactic": "evict", "category": "Resource Eviction", "description": "Suspend SES sending by placing the account in sandbox mode, deleting unauthorized verified identities, and removing SMTP credentials. Stops email abuse and SMS pumping originating from the compromised account.", "aws_services": ["Amazon SES"], "counters": [{"id": "T1496.A001", "name": "Cloud Service Hijacking - SES Messaging", "tactic": "Impact"}, {"id": "T1496.003", "name": "SMS Pumping", "tactic": "Impact"}], "d3fend_ref": "d3f:ProcessTermination"}};
+
+    function showDetail(id) {
+      const t = techniques[id];
+      if (!t) return;
+
+      const countersHtml = t.counters.map(c =>
+        `<li>
+          <span class="detail__counter-id">${c.id}</span>
+          <span class="detail__counter-name">${c.name}</span>
+          <span class="detail__counter-tactic">${c.tactic}</span>
+        </li>`
+      ).join("");
+
+      const servicesHtml = t.aws_services.map(s =>
+        `<span class="tag">${s}</span>`
+      ).join("");
+
+      document.getElementById("detail-content").innerHTML = `
+        <div class="detail__id">${t.id}</div>
+        <div class="detail__tactic detail__tactic--${t.tactic}">${t.tactic}</div>
+        <div class="detail__name">${t.name}</div>
+        <div class="detail__category">${t.category}</div>
+
+        <div class="detail__section">
+          <div class="detail__section-title">Description</div>
+          <div class="detail__description">${t.description}</div>
+        </div>
+
+        <div class="detail__section">
+          <div class="detail__section-title">AWS Services</div>
+          <div class="detail__services">${servicesHtml}</div>
+        </div>
+
+        <div class="detail__section">
+          <div class="detail__section-title">Counters (${t.counters.length} attack techniques)</div>
+          <ul class="detail__counters">${countersHtml}</ul>
+        </div>
+
+        ${t.d3fend_ref ? `
+        <div class="detail__section">
+          <div class="detail__section-title">D3FEND Reference</div>
+          <div class="detail__d3fend">${t.d3fend_ref}</div>
+        </div>` : ""}
+      `;
+      document.getElementById("overlay").classList.add("active");
+      document.getElementById("detail").classList.add("active");
+    }
+
+    function closeDetail() {
+      document.getElementById("overlay").classList.remove("active");
+      document.getElementById("detail").classList.remove("active");
+    }
+
+    document.addEventListener("keydown", e => {
+      if (e.key === "Escape") closeDetail();
+    });
+
+    function filterCards(query) {
+      const q = query.toLowerCase().trim();
+      document.querySelectorAll(".card").forEach(card => {
+        if (!q) {
+          card.classList.remove("hidden");
+          return;
+        }
+        const id = card.dataset.id;
+        const t = techniques[id];
+        const searchable = [
+          t.id, t.name, t.category,
+          ...t.aws_services,
+          ...t.counters.map(c => c.id + " " + c.name),
+        ].join(" ").toLowerCase();
+        card.classList.toggle("hidden", !searchable.includes(q));
+      });
+    }
+  </script>
+</body>
+</html>
