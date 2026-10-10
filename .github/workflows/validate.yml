@@ -7,12 +7,14 @@ on:
       - "catalog/**"
       - "schema/**"
       - "scripts/**"
+      - ".github/workflows/**"
   pull_request:
     paths:
       - "data/**"
       - "catalog/**"
       - "schema/**"
       - "scripts/**"
+      - ".github/workflows/**"
 
 jobs:
   validate:
