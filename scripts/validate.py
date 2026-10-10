@@ -15,6 +15,7 @@ except ImportError:
 
 ROOT = Path(__file__).resolve().parent.parent
 SCHEMA_PATH = ROOT / "schema" / "technique.schema.json"
+CATALOG_PATH = ROOT / "catalog" / "aws-ttc-attacks.yaml"
 DATA_DIR = ROOT / "data"
 TACTIC_DIRS = ["detect", "harden", "evict"]
 
@@ -24,7 +25,13 @@ def load_schema():
         return json.load(f)
 
 
-def validate_file(filepath: Path, schema: dict) -> list[str]:
+def load_attack_ids():
+    with open(CATALOG_PATH) as f:
+        catalog = yaml.safe_load(f)
+    return {t["id"] for tactic in catalog["tactics"] for t in tactic["techniques"]}
+
+
+def validate_file(filepath: Path, schema: dict, attack_ids: set[str]) -> list[str]:
     errors = []
     try:
         with open(filepath) as f:
@@ -48,11 +55,22 @@ def validate_file(filepath: Path, schema: dict) -> list[str]:
             f"directory '{expected_tactic}'"
         )
 
+    # Cross-check: every countered attack must exist in the catalog
+    counters = doc.get("counters")
+    if isinstance(counters, list):
+        for counter_id in counters:
+            if counter_id not in attack_ids:
+                errors.append(
+                    f"{filepath}: counters: '{counter_id}' not found in "
+                    f"{CATALOG_PATH.relative_to(ROOT)}"
+                )
+
     return errors
 
 
 def main():
     schema = load_schema()
+    attack_ids = load_attack_ids()
     all_errors = []
     file_count = 0
 
@@ -62,7 +80,7 @@ def main():
             continue
         for filepath in sorted(tactic_dir.glob("*.yaml")):
             file_count += 1
-            errors = validate_file(filepath, schema)
+            errors = validate_file(filepath, schema, attack_ids)
             all_errors.extend(errors)
 
     if file_count == 0:
